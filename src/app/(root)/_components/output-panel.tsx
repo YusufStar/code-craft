@@ -30,7 +30,6 @@ function OutputPanel() {
   const { messages, setMessages } = useAi();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup state
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null); // Selected language
   const popupRef = useRef<HTMLDivElement | null>(null); // Popup reference
 
   const hasContent = error || output;
@@ -145,12 +144,10 @@ function OutputPanel() {
 
   // Handle language selection from popup
   const handleLanguageSelect = (langId: string) => {
-    setSelectedLanguage(langId);
     setMessage(
       (prevMessage) =>
         `${prevMessage}\n\`\`\`${langId}\n//Please enter your code here\n\`\`\``
     );
-    setSelectedLanguage(null);
     setIsPopupOpen(false);
   };
 
