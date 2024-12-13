@@ -5,16 +5,46 @@ import { defineMonacoThemes, LANGUAGE_CONFIG } from "../_constants";
 import { Editor } from "@monaco-editor/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { RotateCcwIcon, ShareIcon, TypeIcon } from "lucide-react";
+import {
+  RotateCcwIcon,
+  ServerIcon,
+  SettingsIcon,
+  ShareIcon,
+  TypeIcon,
+} from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
 import ShareSnippetDialog from "./share-snippet-dialog";
+import LiveShareSnippetDialog from "./live-share-snippet-dialog";
+import { useSocketStore } from "@/store/useSocketStore";
+
+type Participant = {
+  email: string;
+  canEdit: boolean;
+  canRunCode: boolean;
+};
 
 function EditorPanel() {
+  const { socket, setRoomId } = useSocketStore();
+
   const clerk = useClerk();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const { language, theme, fontSize, editor, setFontSize, setEditor } = useCodeEditorStore();
+  const [isLiveShareDialogOpen, setIsLiveShareDialogOpen] = useState(false);
+  const [liveShare, setliveShare] = useState<null | {
+    liveShareCode: string;
+    participants: Participant[];
+  }>(null);
+  const {
+    language,
+    theme,
+    fontSize,
+    editor,
+    setFontSize,
+    setEditor,
+    livePermission,
+    setLivePermission,
+  } = useCodeEditorStore();
 
   const mounted = useMounted();
 
@@ -23,6 +53,58 @@ function EditorPanel() {
     const newCode = savedCode || LANGUAGE_CONFIG[language].defaultCode;
     if (editor) editor.setValue(newCode);
   }, [language, editor]);
+
+  useEffect(() => {
+    const handleCodeUpdate = ({
+      code,
+      senderId,
+    }: {
+      code: string;
+      senderId: string;
+    }) => {
+      if (!socket) return;
+      if (socket.id !== senderId && editor) {
+        const currentValue = editor.getValue();
+        if (currentValue !== code) {
+          editor.setValue(code);
+        }
+      }
+    };
+
+    const updateParti = (
+      participants: Record<string, { canEdit: boolean; canRunCode: boolean }>
+    ) => {
+      const participantsArray = Object.entries(participants).map(
+        ([email, permissions]) => ({
+          email,
+          ...permissions,
+        })
+      );
+      setliveShare((prev) =>
+        prev ? { ...prev, participants: participantsArray } : null
+      );
+    };
+
+    if (!socket) return;
+
+    socket.on("updateParticipants", updateParti);
+
+    socket.on("codeUpdate", handleCodeUpdate);
+
+    return () => {
+      socket.off("codeUpdate", handleCodeUpdate);
+      socket.off("updateParticipants", handleCodeUpdate);
+    };
+  }, [editor, socket]);
+
+  useEffect(() => {
+    setRoomId(liveShare?.liveShareCode as string);
+    setLivePermission(
+      liveShare?.participants.find(
+        (q) => q.email === clerk.user?.emailAddresses[0].emailAddress
+      )
+    );
+  }, [liveShare]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
@@ -36,7 +118,17 @@ function EditorPanel() {
   };
 
   const handleEditorChange = (value: string | undefined) => {
-    if (value) localStorage.setItem(`editor-code-${language}`, value);
+    if (livePermission !== null) {
+      if (!livePermission?.canEdit) return;
+
+      if (value && socket) {
+        localStorage.setItem(`editor-code-${language}`, value);
+        socket.emit("codeChange", {
+          roomId: liveShare?.liveShareCode,
+          code: value,
+        });
+      }
+    }
   };
 
   const handleFontSizeChange = (newSize: number) => {
@@ -54,11 +146,18 @@ function EditorPanel() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1e1e2e] ring-1 ring-white/5">
-              <Image src={"/" + language + ".png"} alt="Logo" width={24} height={24} />
+              <Image
+                src={"/" + language + ".png"}
+                alt="Logo"
+                width={24}
+                height={24}
+              />
             </div>
             <div>
               <h2 className="text-sm font-medium text-white">Code Editor</h2>
-              <p className="text-xs text-gray-500">Write and execute your code</p>
+              <p className="text-xs text-gray-500">
+                Write and execute your code
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -71,7 +170,9 @@ function EditorPanel() {
                   min="12"
                   max="24"
                   value={fontSize}
-                  onChange={(e) => handleFontSizeChange(parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleFontSizeChange(parseInt(e.target.value))
+                  }
                   className="w-20 h-1 bg-gray-600 rounded-lg cursor-pointer"
                 />
                 <span className="text-sm font-medium text-gray-400 min-w-[2rem] text-center">
@@ -88,6 +189,31 @@ function EditorPanel() {
               aria-label="Reset to default code"
             >
               <RotateCcwIcon className="size-4 text-gray-400" />
+            </motion.button>
+
+            {/* Share Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsLiveShareDialogOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg overflow-hidden bg-gradient-to-r
+               from-blue-500 to-green-600 animate-pulse opacity-90 hover:opacity-100 transition-opacity"
+            >
+              {useSocketStore.getState().roomId ? (
+                <>
+                  <SettingsIcon className="size-4 text-white" />
+                  <span className="text-sm font-medium text-white ">
+                    Live Settings
+                  </span>
+                </>
+              ) : (
+                <>
+                  <ServerIcon className="size-4 text-white" />
+                  <span className="text-sm font-medium text-white ">
+                    Live Share
+                  </span>
+                </>
+              )}
             </motion.button>
 
             {/* Share Button */}
@@ -141,7 +267,16 @@ function EditorPanel() {
           {!clerk.loaded && <EditorPanelSkeleton />}
         </div>
       </div>
-      {isShareDialogOpen && <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />}
+      {isShareDialogOpen && (
+        <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />
+      )}
+      {isLiveShareDialogOpen && (
+        <LiveShareSnippetDialog
+          liveShare={liveShare}
+          setliveShare={setliveShare}
+          onClose={() => setIsLiveShareDialogOpen(false)}
+        />
+      )}
     </div>
   );
 }

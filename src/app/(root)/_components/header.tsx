@@ -1,21 +1,24 @@
-import { currentUser } from "@clerk/nextjs/server"
-import { ConvexHttpClient } from "convex/browser"
-import { api } from "../../../../convex/_generated/api"
-import Link from "next/link"
-import { Blocks, Code2, Sparkles } from "lucide-react"
-import { SignedIn } from "@clerk/nextjs"
-import ThemeSelector from "./theme-selector"
-import LanguageSelector from "./language-selector"
-import RunButton from "./run-button"
-import HeaderProfileBtn from "./header-profile-button"
+import { currentUser } from "@clerk/nextjs/server";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../../convex/_generated/api";
+import Link from "next/link";
+import { Blocks, Code2, Sparkles } from "lucide-react";
+import { SignedIn } from "@clerk/nextjs";
+import ThemeSelector from "./theme-selector";
+import LanguageSelector from "./language-selector";
+import RunButton from "./run-button";
+import HeaderProfileBtn from "./header-profile-button";
+import VersionSelector from "./version-selector";
 
 async function Header() {
-  const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
-  const user = await currentUser()
+  const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+  const user = await currentUser();
 
   const convexUser = await convex.query(api.users.getUser, {
-    userId: user?.id || ""
-  })
+    userId: user?.id || "",
+  });
+
+  console.log(convexUser);
 
   return (
     <div className="relative z-10">
@@ -76,6 +79,7 @@ async function Header() {
           <div className="flex items-center gap-3">
             <ThemeSelector />
             <LanguageSelector hasAccess={Boolean(convexUser?.isPro)} />
+            <VersionSelector hasAccess={Boolean(convexUser?.isPro)}/>
           </div>
 
           {!convexUser?.isPro && (
@@ -102,7 +106,7 @@ async function Header() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Header
+export default Header;

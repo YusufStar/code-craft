@@ -65,7 +65,9 @@ export const getUserStats = query({
 
     // Get all starred snippet details to analyze languages
     const snippetIds = starredSnippets.map((star) => star.snippetId);
-    const snippetDetails = await Promise.all(snippetIds.map((id) => ctx.db.get(id)));
+    const snippetDetails = await Promise.all(
+      snippetIds.map((id) => ctx.db.get(id))
+    );
 
     // Calculate most starred language
     const starredLanguages = snippetDetails.filter(Boolean).reduce(
@@ -79,7 +81,8 @@ export const getUserStats = query({
     );
 
     const mostStarredLanguage =
-      Object.entries(starredLanguages).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "N/A";
+      Object.entries(starredLanguages).sort(([, a], [, b]) => b - a)[0]?.[0] ??
+      "N/A";
 
     // Calculate execution stats
     const last24Hours = executions.filter(
@@ -96,7 +99,9 @@ export const getUserStats = query({
 
     const languages = Object.keys(languageStats);
     const favoriteLanguage = languages.length
-      ? languages.reduce((a, b) => (languageStats[a] > languageStats[b] ? a : b))
+      ? languages.reduce((a, b) =>
+          languageStats[a] > languageStats[b] ? a : b
+        )
       : "N/A";
 
     return {
@@ -108,5 +113,38 @@ export const getUserStats = query({
       languageStats,
       mostStarredLanguage,
     };
+  },
+});
+
+export const controlExecution = mutation({
+  args: {
+    language: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity)
+      return {
+        error: true,
+        message: "Not authenticated",
+      };
+
+    // check pro status
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user_id")
+      .filter((q) => q.eq(q.field("userId"), identity.subject))
+      .first();
+
+    if (!user?.isPro && args.language !== "javascript") {
+      return {
+        error: true,
+        message: "Pro subscription required to use this language",
+      };
+    } else {
+      return {
+        error: false,
+        message: "",
+      };
+    }
   },
 });

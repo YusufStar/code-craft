@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ChevronDownIcon, Lock, Sparkles } from "lucide-react";
 import useMounted from "@/hooks/useMounted";
+import { useSocketStore } from "@/store/useSocketStore";
 
 function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,11 +14,15 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
 
   const { language, setLanguage } = useCodeEditorStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { socket, roomId } = useSocketStore();
   const currentLanguageObj = LANGUAGE_CONFIG[language];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -26,8 +31,25 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const updateLang = (langId: string) => {
+      if (!socket) return;
+      setLanguage(langId);
+      console.log(langId);
+    };
+
+    if (!socket) return;
+    socket.on("langUpdate", updateLang);
+
+    return () => {
+      socket.off("langUpdate", updateLang);
+    };
+  }, [socket]);
+
   const handleLanguageSelect = (langId: string) => {
     if (!hasAccess && langId !== "javascript") return;
+
+    socket?.emit("langChange", { lang: langId, roomId: roomId });
 
     setLanguage(langId);
     setIsOpen(false);
@@ -84,7 +106,9 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
            rounded-xl border border-[#313244] shadow-2xl py-2 z-50"
           >
             <div className="px-3 pb-2 mb-2 border-b border-gray-800/50">
-              <p className="text-xs font-medium text-gray-400">Select Language</p>
+              <p className="text-xs font-medium text-gray-400">
+                Select Language
+              </p>
             </div>
 
             <div className="max-h-[280px] overflow-y-auto overflow-x-hidden">
