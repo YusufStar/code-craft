@@ -231,7 +231,7 @@ function EditorPanel() {
         </div>
 
         {/* Editor  */}
-        <div className="relative group rounded-xl overflow-hidden ring-1 ring-white/[0.05]">
+        <div className="relative h-[600px] group rounded-xl overflow-hidden ring-1 ring-white/[0.05]">
           {clerk.loaded && (
             <Editor
               height="600px"
@@ -267,6 +267,7 @@ function EditorPanel() {
           {!clerk.loaded && <EditorPanelSkeleton />}
         </div>
       </div>
+      
       {isShareDialogOpen && (
         <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />
       )}

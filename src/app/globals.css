@@ -42,3 +42,7 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #44475a #1e1e2f;
 }
+
+.grid {
+  grid-auto-rows: 1fr;
+}

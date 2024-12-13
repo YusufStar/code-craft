@@ -17,10 +17,20 @@ import { useSocketStore } from "@/store/useSocketStore";
 import useAi from "@/hooks/useAi";
 import CommentContent from "./CommentContent";
 import { LANGUAGE_CONFIG } from "../_constants";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { useUser } from "@clerk/nextjs";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 function OutputPanel() {
+  const router = useRouter();
+  const { user, isLoaded } = useUser();
+
+  const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
+
   const { socket, roomId } = useSocketStore();
-  const [maxHeight] = useState(300);
+  const [maxHeight] = useState(150);
   const { output, error, isRunning, editor } = useCodeEditorStore();
   const [isCopied, setIsCopied] = useState(false);
   const [currentTab, setCurrentTab] = useState<"output" | "ai">("output");
@@ -114,6 +124,10 @@ function OutputPanel() {
   };
 
   const handleSendMessage = () => {
+    if (message.length <= 0) {
+      toast("Please enter any message and try again.");
+      return null;
+    }
     setMessages({
       role: "user",
       content: message,
@@ -151,10 +165,21 @@ function OutputPanel() {
     setIsPopupOpen(false);
   };
 
+  if (!user && isLoaded && currentTab === "ai") {
+    setCurrentTab("output");
+    if (!user) {
+      toast("Please login and try again.");
+    }
+    if (!userData?.isPro) {
+      router.push("/pricing");
+    }
+    return null;
+  }
+
   return (
-    <div className="relative bg-[#181825] rounded-xl p-4 ring-1 ring-gray-800/50">
+    <div className="relative h-full bg-[#181825] rounded-xl p-6 ring-1 ring-gray-800/50">
       {/* Header */}
-      <div className="relative flex items-center justify gap-2.5 mb-3">
+      <div className="relative flex items-center justify gap-2.5 h-[36px] mb-4">
         <div
           ref={tabRefs.output}
           onClick={() => setCurrentTab("output")}
@@ -210,7 +235,7 @@ function OutputPanel() {
         )}
 
         <div
-          className="absolute -bottom-2 rounded-xl left-0 h-1 bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-300"
+          className="absolute -bottom-2 rounded-xl left-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-300"
           style={{
             width: underlineStyle.width,
             transform: `translateX(${underlineStyle.left}px)`,
@@ -227,11 +252,11 @@ function OutputPanel() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3 }}
-            className="relative"
+            className="relative flex flex-col max-h-[600px]"
           >
             <div
               className="relative bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] 
-        rounded-xl p-4 h-[600px] overflow-auto font-mono text-sm"
+        rounded-xl p-4 h-[600px]  overflow-auto font-mono text-sm"
             >
               {isRunning ? (
                 <RunningCodeSkeleton />
@@ -269,7 +294,7 @@ function OutputPanel() {
           </motion.div>
         )}
 
-        {currentTab === "ai" && (
+        {userData?.isPro && currentTab === "ai" && (
           <AnimatePresence mode="wait">
             <motion.div
               key="ai"
@@ -277,9 +302,9 @@ function OutputPanel() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3 }}
-              className="relative"
+              className="relative flex flex-col max-h-[600px]"
             >
-              <div className="relative bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] rounded-xl p-4 h-[600px] overflow-auto font-mono text-sm">
+              <div className="relative mt-2 bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] rounded-xl p-4 flex-1 overflow-auto font-mono text-sm">
                 <div className="h-full flex flex-col items-center justify-between">
                   {messages.length > 0 ? (
                     messages.map((message, idx: number) => (
@@ -302,15 +327,17 @@ function OutputPanel() {
               {/* Textarea input */}
               <div className="w-full mt-4">
                 <div className="flex items-end relative gap-2">
-                  <textarea
-                    ref={textareaRef}
-                    value={message}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type your message..."
-                    className="px-4 py-2 pb-[3rem] w-full bg-[#1e1e2e] text-gray-300 border border-[#313244] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none overflow-hidden text-sm"
-                    style={{ maxHeight: `${maxHeight}px` }} // Limit the height of the textarea
-                  />
+                  <div className="px-4 py-2 pb-[2.5rem] w-full bg-[#1e1e2e] text-gray-300 border border-[#313244] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none overflow-hidden text-sm">
+                    <textarea
+                      value={message}
+                      ref={textareaRef}
+                      onChange={handleChange}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Type your message..."
+                      className="w-full text-gray-300 resize-none overflow-hidden text-sm bg-transparent outline-none"
+                      style={{ maxHeight: `${maxHeight}px` }}
+                    />
+                  </div>
 
                   <div className="absolute flex items-center w-full left-2 bottom-2">
                     <button
