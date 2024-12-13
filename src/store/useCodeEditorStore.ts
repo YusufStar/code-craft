@@ -42,7 +42,7 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     selectedVersion: "18.15.0",
     livePermission: null,
 
-    setLivePermission: (dt: any) => {
+    setLivePermission: (dt) => {
       set({ livePermission: dt });
     },
 

@@ -19,13 +19,13 @@ type LiveShare = {
 type LiveShareSnippetDialogProps = {
   onClose: () => void;
   liveShare: LiveShare | null;
-  setliveShare: Dispatch<SetStateAction<LiveShare | null>>;
+  setLiveShare: Dispatch<SetStateAction<LiveShare | null>>;
 };
 
 function LiveShareSnippetDialog({
   onClose,
   liveShare,
-  setliveShare,
+  setLiveShare,
 }: LiveShareSnippetDialogProps) {
   const { socket, setRoomId } = useSocketStore();
   const { user } = useUser();
@@ -35,7 +35,7 @@ function LiveShareSnippetDialog({
   const handleJoinRoom = (roomId: string, email: string) => {
     if (!socket) return;
     socket.emit("joinRoom", { roomId, email });
-    setliveShare({ liveShareCode: roomId, participants: [] });
+    setLiveShare({ liveShareCode: roomId, participants: [] });
     setNewRoomId(roomId);
   };
 
@@ -52,7 +52,7 @@ function LiveShareSnippetDialog({
         : participant
     );
 
-    setliveShare({ ...liveShare, participants: updatedParticipants });
+    setLiveShare({ ...liveShare, participants: updatedParticipants });
 
     socket.emit("updatePermissions", {
       roomId: liveShare.liveShareCode,
@@ -72,7 +72,7 @@ function LiveShareSnippetDialog({
       useSocketStore.setState({
         roomId: null,
       });
-      setliveShare(null);
+      setLiveShare(null);
       setRoomId(null);
       setLivePermission(null);
       setNewRoomId("");

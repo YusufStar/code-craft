@@ -44,7 +44,7 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
     return () => {
       socket.off("langUpdate", updateLang);
     };
-  }, [socket]);
+  }, [socket, setLanguage]);
 
   const handleLanguageSelect = (langId: string) => {
     if (!hasAccess && langId !== "javascript") return;

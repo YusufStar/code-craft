@@ -31,7 +31,7 @@ function EditorPanel() {
   const clerk = useClerk();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isLiveShareDialogOpen, setIsLiveShareDialogOpen] = useState(false);
-  const [liveShare, setliveShare] = useState<null | {
+  const [liveShare, setLiveShare] = useState<null | {
     liveShareCode: string;
     participants: Participant[];
   }>(null);
@@ -80,7 +80,7 @@ function EditorPanel() {
           ...permissions,
         })
       );
-      setliveShare((prev) =>
+      setLiveShare((prev) =>
         prev ? { ...prev, participants: participantsArray } : null
       );
     };
@@ -273,7 +273,7 @@ function EditorPanel() {
       {isLiveShareDialogOpen && (
         <LiveShareSnippetDialog
           liveShare={liveShare}
-          setliveShare={setliveShare}
+          setLiveShare={setLiveShare}
           onClose={() => setIsLiveShareDialogOpen(false)}
         />
       )}
