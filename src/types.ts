@@ -33,7 +33,14 @@ export interface ExecuteCodeResponse {
 
 export interface ExecutionResult {
   code: string;
-  output: string;
+  output: {
+    submissionConfirm: boolean;
+    detailConfirm: {
+      params: string;
+      response: string;
+      expectedResponse: string;
+    }[];
+  } | null;
   error: string | null;
 }
 
@@ -69,7 +76,14 @@ export interface CodeEditorState {
 
 export interface ProblemState {
   language: string;
-  output: string;
+  output: {
+    submissionConfirm: boolean;
+    detailConfirm: {
+      params: string;
+      response: string;
+      expectedResponse: string;
+    }[];
+  } | null;
   isRunning: boolean;
   error: string | null;
   theme: string;
@@ -112,9 +126,12 @@ export interface Problem {
   _creationTime: number; // Creation timestamp
   title: string; // Problem title
   description: string; // Problem description
-  expectedOutput: string; // Expected output for the problem
   languages: {
     language: string; // Language name
     starterTemplate: string; // Starter template for the language
+    expectedOutput: {
+      key: string;
+      value: string;
+    }[]; // Expected output for the problem
   }[]; // Array of language objects
 }

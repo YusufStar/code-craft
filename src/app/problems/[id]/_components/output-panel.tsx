@@ -3,14 +3,13 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Copy,
+  Share,
   Sparkles,
   Terminal,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RunningCodeSkeleton from "./running-code-skeleton";
-import { useSocketStore } from "@/store/useSocketStore";
 import { useProblemEditorStore } from "@/store/useProblemStore";
 import Markdown from "react-markdown";
 import remarkMdx from "remark-mdx";
@@ -22,14 +21,10 @@ import remarkBreaks from "remark-breaks";
 import CodeBlock from "./CodeBlock";
 
 function OutputPanel() {
-  const { socket, roomId } = useSocketStore();
-  const { output, error, isRunning, editor, currentProblem, currentTab } =
+  const { output, error, isRunning, currentProblem, currentTab, language } =
     useProblemEditorStore();
-  const [isCopied, setIsCopied] = useState(false);
-
   const [underlineStyle, setUnderlineStyle] = useState({ width: 0, left: 0 });
 
-  const hasContent = error || output;
   const tabRefs = {
     output: useRef<HTMLDivElement | null>(null),
     description: useRef<HTMLDivElement | null>(null),
@@ -42,66 +37,13 @@ function OutputPanel() {
     }
   }, [currentTab]);
 
-  useEffect(() => {
-    if (editor) {
-      socket?.emit("responseChange", {
-        roomId,
-        response: {
-          output,
-          error,
-          isRunning,
-        },
-      });
-    }
-  }, [output, error, isRunning, editor, roomId, socket]);
-
-  useEffect(() => {
-    const updateResponse = ({
-      output,
-      error,
-      isRunning,
-      senderId,
-    }: {
-      output: string;
-      error: string;
-      isRunning: boolean;
-      senderId: string;
-    }) => {
-      if (!socket) return;
-      if (socket.id !== senderId) {
-        useProblemEditorStore.setState({
-          output,
-          error,
-          isRunning,
-          executionResult: {
-            error,
-            output,
-            code: useProblemEditorStore.getState().getCode(),
-          },
-        });
-      }
-    };
-
-    if (!socket) return;
-    socket.on("responseUpdate", updateResponse);
-
-    return () => {
-      socket.off("responseUpdate", updateResponse);
-    };
-  }, [socket]);
-
-  const handleCopy = async () => {
-    if (!hasContent) return;
-    await navigator.clipboard.writeText(error || output);
-    setIsCopied(true);
-
-    setTimeout(() => setIsCopied(false), 2000);
-  };
+  const isSolutionCorrect = false;
 
   return (
     <div className="relative h-full bg-[#181825] rounded-xl p-6 ring-1 ring-gray-800/50">
       {/* Header */}
       <div className="relative flex items-center justify gap-2.5 h-[36px] mb-4">
+        {/* Tab buttons */}
         <div
           ref={tabRefs.output}
           onClick={() =>
@@ -123,6 +65,7 @@ function OutputPanel() {
           </span>
         </div>
 
+        {/* AI Assistant Tab */}
         <div
           ref={tabRefs.description}
           onClick={() =>
@@ -144,24 +87,14 @@ function OutputPanel() {
           </span>
         </div>
 
-        {hasContent && currentTab === "output" && (
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-400 hover:text-gray-300 bg-[#1e1e2e] 
-            rounded-lg ring-1 ring-gray-800/50 hover:ring-gray-700/50 transition-all"
-          >
-            {isCopied ? (
-              <>
-                <CheckCircle className="w-3.5 h-3.5" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5" />
-                Copy
-              </>
-            )}
-          </button>
+        {output?.submissionConfirm && (
+          <>
+            <a className="relative inline-flex items-center justify-center px-4 py-2 overflow-hidden font-mono font-medium text-sm tracking-tighter text-white bg-gray-800 rounded-lg group">
+              <span className="absolute w-0 h-0 transition-all duration-500 ease-out bg-green-500 rounded-full group-hover:w-56 group-hover:h-56"></span>
+              <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-gray-700"></span>
+              <span className="relative">Share Submission</span>
+            </a>
+          </>
         )}
 
         <div
@@ -201,14 +134,51 @@ function OutputPanel() {
                   </div>
                 </div>
               ) : output ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-emerald-400 mb-3">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">Execution Successful</span>
+                <div className="space-y-4">
+                  {/* Execution Status */}
+                  {output.submissionConfirm ? (
+                    <div className="flex items-center gap-2 text-emerald-400 mb-3">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-medium">Submission Correct</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-red-400/80 mb-3">
+                      <AlertTriangle className="w-5 h-5" />
+                      <span className="font-medium">Submission Incorrect</span>
+                    </div>
+                  )}
+
+                  {/* Actual Output Section */}
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-semibold text-gray-200">
+                      Difference Output
+                    </h3>
+                    <div className="flex flex-col gap-4 whitespace-pre-wrap text-gray-300">
+                      {output.detailConfirm.map(
+                        (
+                          { expectedResponse, params, response },
+                          idx: number
+                        ) => (
+                          <div className="flex flex-col gap-1" key={idx}>
+                            <div className="flex items-center gap-1">
+                              <span>Params: </span>
+                              <span>{params}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span>Expected Response: </span>
+                              <span>{expectedResponse}</span>
+                            </div>
+                            <div
+                              className={`flex items-center gap-1 ${expectedResponse === response ? "text-emerald-400" : "text-red-400"}`}
+                            >
+                              <span>Actual Response: </span>
+                              <span>{response}</span>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
                   </div>
-                  <pre className="whitespace-pre-wrap text-gray-300">
-                    {output}
-                  </pre>
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-gray-500">

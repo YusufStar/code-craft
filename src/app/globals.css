@@ -47,6 +47,42 @@ body {
   grid-auto-rows: 1fr;
 }
 
+@keyframes gradient-border {
+  0% {
+    border-image-source: linear-gradient(90deg, #ff0080, #ffcd3c);
+  }
+  50% {
+    border-image-source: linear-gradient(180deg, #ff0080, #00ffff);
+  }
+  100% {
+    border-image-source: linear-gradient(270deg, #ffcd3c, #ff0080);
+  }
+}
+
+@keyframes background-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-border {
+  border-width: 3px;
+  border-style: solid;
+  border-image-slice: 1;
+  animation: gradient-border 3s linear infinite;
+}
+
+.animated-background {
+  background: linear-gradient(90deg, #ff0080, #00ffff, #ffcd3c);
+  background-size: 200% 200%;
+  animation: background-move 10s ease-in-out infinite;
+}
 .markdown > * {
   all: revert;
 }

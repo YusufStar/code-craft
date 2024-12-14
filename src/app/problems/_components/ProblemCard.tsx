@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Trash2, User } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -41,7 +41,7 @@ function ProblemCard({ problem }: { problem: Problem }) {
           border border-[#313244]/50 hover:border-[#313244] 
           transition-all duration-300 overflow-hidden"
         >
-          <div className="p-6">
+          <div className="p-4">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex flex-row items-center gap-3">
@@ -106,23 +106,6 @@ function ProblemCard({ problem }: { problem: Problem }) {
                 <h2 className="text-xl font-semibold text-white mb-2 line-clamp-1 group-hover:text-blue-400 transition-colors">
                   {problem.title}
                 </h2>
-                <div className="flex items-center gap-3 text-sm text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded-md bg-gray-800/50">
-                      <User className="size-3" />
-                    </div>
-                    <span className="truncate max-w-[150px]">
-                      {problem.expectedOutput}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative group/code">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/15 to-purple-500/5 rounded-lg opacity-0 group-hover/code:opacity-100 transition-all" />
-                <div className="relative bg-black/30 rounded-lg p-4 overflow-hidden text-sm text-gray-300 font-mono line-clamp-3">
-                  {problem.description}
-                </div>
               </div>
             </div>
           </div>

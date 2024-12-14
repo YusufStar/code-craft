@@ -32,7 +32,7 @@ const CodeBlock = ({ language, code }: { language: string; code: string }) => {
             background: "transparent",
             margin: 0,
           }}
-          showLineNumbers={true}
+          showLineNumbers={false}
           wrapLines={true} // wrap long lines
         >
           {trimmedCode}

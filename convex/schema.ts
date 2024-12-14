@@ -46,11 +46,16 @@ export default defineSchema({
   problems: defineTable({
     title: v.string(), // Problem title
     description: v.string(), // Problem description
-    expectedOutput: v.string(), // Expected output for the problem
     languages: v.array(
       v.object({
         language: v.string(), // Language name
         starterTemplate: v.string(), // Starter template for the language
+        expectedOutput: v.array(
+          v.object({
+            key: v.string(),
+            value: v.string(),
+          })
+        ),
       })
     ),
   }).index("by_title", ["title"]),

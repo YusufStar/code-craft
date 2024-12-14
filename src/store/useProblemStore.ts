@@ -28,7 +28,7 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
 
   return {
     ...initialState,
-    output: "",
+    output: null,
     isRunning: false,
     error: null,
     editor: null,
@@ -83,13 +83,13 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
 
       set({
         language,
-        output: "",
+        output: null,
         error: null,
       });
     },
 
     runCode: async () => {
-      const { language, getCode } = get();
+      const { language, getCode, currentProblem } = get();
       const code = getCode();
 
       set({
@@ -101,66 +101,80 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
         return;
       }
 
-      set({ isRunning: true, error: null, output: "" });
+      set({ isRunning: true, error: null, output: null });
 
       try {
         const runtime = LANGUAGE_CONFIG[language].pistonRuntime;
-        const response = await fetch("https://emkc.org/api/v2/piston/execute", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            language: runtime.language,
-            version: runtime.version,
-            files: [{ content: code }],
-          }),
-        });
+        const selectedLanguage = currentProblem?.languages.find(
+          ({ language: lang }) => lang.toLowerCase() === language.toLowerCase()
+        );
 
-        const data = await response.json();
-
-        // Check if an error message exists in the response
-        if (data.message) {
+        if (!selectedLanguage) {
           set({
-            error: data.message,
-            executionResult: { code, output: "", error: data.message },
+            error: "Selected language is not supported for this problem.",
+            isRunning: false,
           });
           return;
         }
 
-        // Check for compile errors
-        if (data.compile?.code !== undefined && data.compile.code !== 0) {
-          const error =
-            data.compile.stderr || data.compile.output || "Compilation error";
-          set({
-            error,
-            executionResult: { code, output: "", error },
+        const detailConfirm = [];
+        let submissionConfirm = true;
+
+        for (let i = 0; i < selectedLanguage.expectedOutput.length; i++) {
+          const { key, value: expectedValue } =
+            selectedLanguage.expectedOutput[i];
+
+          if (LANGUAGE_CONFIG[language].outputWrapper === undefined) return;
+          const modifiedCode = LANGUAGE_CONFIG[language].outputWrapper(
+            code,
+            key
+          );
+
+          const response = await fetch(
+            "https://emkc.org/api/v2/piston/execute",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                language: runtime.language,
+                version: runtime.version,
+                files: [{ content: modifiedCode }],
+              }),
+            }
+          );
+
+          const data = await response.json();
+          const actualOutput = data.run?.output?.trim() || "";
+          const result = (actualOutput as string).split("\n");
+
+          const isCorrect = actualOutput.trim() === expectedValue.trim();
+          detailConfirm.push({
+            params: key,
+            response: result[result.length - 1],
+            expectedResponse: expectedValue,
           });
-          return;
+
+          if (!isCorrect) {
+            submissionConfirm = false;
+          }
         }
 
-        // Check for runtime errors
-        if (data.run?.code !== undefined && data.run.code !== 0) {
-          const error = data.run.stderr || data.run.output || "Runtime error";
-          set({
-            error,
-            executionResult: { code, output: "", error },
-          });
-          return;
-        }
-
-        // Handle successful execution
-        const output = data.run?.output?.trim() || "";
         set({
-          output,
+          output: { submissionConfirm, detailConfirm },
           error: null,
-          executionResult: { code, output, error: null },
+          executionResult: {
+            code,
+            output: { submissionConfirm, detailConfirm },
+            error: null,
+          },
         });
       } catch (error) {
         console.error("Error running code:", error);
         set({
           error: "Error running code",
-          executionResult: { code, output: "", error: "Error running code" },
+          executionResult: { code, output: null, error: "Error running code" },
         });
       } finally {
         set({ isRunning: false });

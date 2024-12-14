@@ -10,6 +10,7 @@ type LanguageConfig = Record<
     pistonRuntime: { language: string; version: string };
     monacoLanguage: string;
     defaultCode: string;
+    outputWrapper?: (code: string, params: string) => string;
   }
 >;
 
@@ -20,6 +21,8 @@ export const LANGUAGE_CONFIG: LanguageConfig = {
     logoPath: "/javascript.png",
     pistonRuntime: { language: "javascript", version: "18.15.0" }, // api that we're gonna be using
     monacoLanguage: "javascript",
+    outputWrapper: (code, params) =>
+      `${code}\nconsole.log(solution(${params}))`,
     defaultCode: `// JavaScript Playground
 const numbers = [1, 2, 3, 4, 5];
 
@@ -77,6 +80,7 @@ console.log('Sum of numbers:', math.sum());`,
     id: "python",
     label: "Python",
     logoPath: "/python.png",
+    outputWrapper: (code, params) => `${code}\nprint(solution(${params}))`,
     pistonRuntime: { language: "python", version: "3.10.0" },
     monacoLanguage: "python",
     defaultCode: `# Python Playground
@@ -100,6 +104,8 @@ print(f"Sum of numbers: {numbers_sum}")`,
     label: "Java",
     logoPath: "/java.png",
     pistonRuntime: { language: "java", version: "15.0.2" },
+    outputWrapper: (code, params) =>
+      `${code}\nSystem.out.println(solution(${params}));`,
     monacoLanguage: "java",
     defaultCode: `public class Main {
   public static void main(String[] args) {
@@ -216,6 +222,17 @@ func main() {
     label: "C++",
     logoPath: "/cpp.png",
     pistonRuntime: { language: "cpp", version: "10.2.0" },
+    outputWrapper: (code, params) => `
+#include <iostream>
+using namespace std;
+
+${code}
+
+int main() {
+    cout << solution(${params}) << endl;
+    return 0;
+}
+`,
     monacoLanguage: "cpp",
     defaultCode: `#include <iostream>
 #include <vector>

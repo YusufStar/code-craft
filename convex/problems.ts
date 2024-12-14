@@ -6,47 +6,25 @@ export const addProblem = mutation({
   args: {
     title: v.string(),
     description: v.string(),
-    expectedOutput: v.string(),
     languages: v.array(
       v.object({
         language: v.string(),
         starterTemplate: v.string(),
+        expectedOutput: v.array(
+          v.object({
+            key: v.string(), // The input (e.g., parameter passed to the solution function)
+            value: v.string(), // The expected output for that input
+          })
+        ),
       })
     ),
   },
-  handler: async (
-    { db },
-    { title, description, expectedOutput, languages }
-  ) => {
+  handler: async ({ db }, { title, description, languages }) => {
     return await db.insert("problems", {
       title,
       description,
-      expectedOutput,
       languages,
     });
-  },
-});
-
-// Problems: Update an existing problem
-export const updateProblem = mutation({
-  args: {
-    problemId: v.id("problems"),
-    updates: v.object({
-      title: v.optional(v.string()),
-      description: v.optional(v.string()),
-      expectedOutput: v.optional(v.string()),
-      languages: v.optional(
-        v.array(
-          v.object({
-            language: v.string(),
-            starterTemplate: v.string(),
-          })
-        )
-      ),
-    }),
-  },
-  handler: async ({ db }, { problemId, updates }) => {
-    return await db.patch(problemId, updates);
   },
 });
 
