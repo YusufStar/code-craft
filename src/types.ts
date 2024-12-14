@@ -67,6 +67,24 @@ export interface CodeEditorState {
   setVersion: (version: string) => void;
 }
 
+export interface ProblemState {
+  language: string;
+  output: string;
+  isRunning: boolean;
+  error: string | null;
+  theme: string;
+  fontSize: number;
+  editor: Monaco | null;
+  executionResult: ExecutionResult | null;
+
+  setEditor: (editor: Monaco) => void;
+  getCode: () => string;
+  setLanguage: (language: string) => void;
+  setTheme: (theme: string) => void;
+  setFontSize: (fontSize: number) => void;
+  runCode: () => Promise<void>;
+}
+
 export interface Snippet {
   _id: Id<"snippets">;
   _creationTime: number;

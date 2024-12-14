@@ -42,4 +42,27 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_snippet_id", ["snippetId"])
     .index("by_user_id_and_snippet_id", ["userId", "snippetId"]),
+
+  problems: defineTable({
+    title: v.string(), // Problem title
+    description: v.string(), // Problem description
+    expectedOutput: v.string(), // Expected output for the problem
+    languages: v.array(
+      v.object({
+        language: v.string(), // Language name
+        starterTemplate: v.string(), // Starter template for the language
+      })
+    ),
+  }).index("by_title", ["title"]),
+
+  solves: defineTable({
+    problemId: v.id("problems"), // Reference to the problem
+    userId: v.string(), // User who solved the problem
+    code: v.string(), // User's solution code
+    output: v.optional(v.string()), // Output of the code
+    isSuccessful: v.boolean(), // Whether the solution was successful
+    language: v.string(), // Language used in the solution
+  })
+    .index("by_problem_id", ["problemId"])
+    .index("by_user_id", ["userId"]),
 });
