@@ -90,7 +90,8 @@ export interface ProblemState {
   setTheme: (theme: string) => void;
   setFontSize: (fontSize: number) => void;
   runCode: () => Promise<void>;
-  loadDefaultProblemCode: () => Promise<void>;
+  loadDefaultProblemCode: () => void;
+  getDefaultProblemCode: () => string;
 
   // New method to fetch problem by ID
   getProblemWithId: (problemData: Problem) => Promise<void>;

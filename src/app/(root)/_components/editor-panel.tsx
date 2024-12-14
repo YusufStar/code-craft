@@ -118,11 +118,12 @@ function EditorPanel() {
   };
 
   const handleEditorChange = (value: string | undefined) => {
+    console.log(value);
+    localStorage.setItem(`editor-code-${language}`, value as string);
     if (livePermission !== null) {
       if (!livePermission?.canEdit) return;
 
       if (value && socket) {
-        localStorage.setItem(`editor-code-${language}`, value);
         socket.emit("codeChange", {
           roomId: liveShare?.liveShareCode,
           code: value,
@@ -267,7 +268,7 @@ function EditorPanel() {
           {!clerk.loaded && <EditorPanelSkeleton />}
         </div>
       </div>
-      
+
       {isShareDialogOpen && (
         <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />
       )}

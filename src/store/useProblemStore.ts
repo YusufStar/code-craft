@@ -50,9 +50,14 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
         ({ language }) =>
           get().language.toLowerCase() === language.toLocaleLowerCase()
       );
-      console.log(savedCode);
-      console.log(get().editor);
       get().editor?.setValue(savedCode?.starterTemplate);
+    },
+    getDefaultProblemCode: () => {
+      const savedCode = get().currentProblem?.languages.find(
+        ({ language }) =>
+          get().language.toLowerCase() === language.toLocaleLowerCase()
+      );
+      return savedCode?.starterTemplate || "";
     },
 
     setTheme: (theme: string) => {
@@ -75,8 +80,6 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
 
       localStorage.setItem(`editor-${language}-version`, savedVersion);
       localStorage.setItem("editor-language", language);
-
-      get().loadDefaultProblemCode();
 
       set({
         language,

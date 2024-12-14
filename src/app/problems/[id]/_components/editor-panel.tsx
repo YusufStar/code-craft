@@ -40,6 +40,7 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
     setFontSize,
     setEditor,
     getProblemWithId,
+    loadDefaultProblemCode,
   } = useProblemEditorStore();
 
   const mounted = useMounted();
@@ -50,10 +51,10 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
   }, [problemData]);
 
   useEffect(() => {
-    const savedCode = localStorage.getItem(`editor-code-${language}`);
-    const newCode = savedCode || LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(newCode);
-  }, [language, editor]);
+    if (editor) {
+      loadDefaultProblemCode();
+    }
+  }, [language, problemData]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
@@ -61,9 +62,7 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
   }, [setFontSize]);
 
   const handleRefresh = () => {
-    const defaultCode = LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(defaultCode);
-    setEditor(editor);
+    loadDefaultProblemCode();
   };
 
   const handleEditorChange = (value: string | undefined) => {
@@ -167,7 +166,7 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
             />
           )}
 
-          {!clerk.loaded && <EditorPanelSkeleton />}
+          {(!clerk.loaded || !problemData) && <EditorPanelSkeleton />}
         </div>
       </div>
 
