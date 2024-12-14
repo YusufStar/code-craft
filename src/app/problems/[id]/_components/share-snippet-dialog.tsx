@@ -1,7 +1,8 @@
+"use client"
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "../../../../../convex/_generated/api";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
 

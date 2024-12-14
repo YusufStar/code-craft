@@ -1,5 +1,4 @@
 "use client";
-
 import {
   getExecutionResult,
   useCodeEditorStore,
@@ -8,32 +7,25 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { motion } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "../../../../../convex/_generated/api";
 import { useSocketStore } from "@/store/useSocketStore";
+import { useProblemEditorStore } from "@/store/useProblemStore";
 
 function RunButton() {
   const { user } = useUser();
-  const {
-    runCode,
-    language,
-    isRunning,
-    livePermission,
-    setLanguage,
-    setVersion,
-  } = useCodeEditorStore();
-  const { roomId, setRoomId } = useSocketStore();
+  const { runCode, language, isRunning, setLanguage } = useProblemEditorStore();
+  const { setRoomId } = useSocketStore();
   const saveExecution = useMutation(api.codeExecutions.saveExecution);
   const controlExecution = useMutation(api.codeExecutions.controlExecution);
 
   const handleRun = async () => {
     // if (!!roomId && !livePermission?.canRunCode) return;
 
-    const { error, message } = (await controlExecution({ language })) as any;
+    const { error, message } = await controlExecution({ language });
 
     if (error) {
       const msg = !!message ? message : "Unexpected error occurred";
       setLanguage("javascript");
-      setVersion("18.15.0");
       useCodeEditorStore.setState({
         error: msg,
         executionResult: {

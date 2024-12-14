@@ -1,5 +1,4 @@
 "use client";
-import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 import { useEffect, useState } from "react";
 import { defineMonacoThemes, LANGUAGE_CONFIG } from "../_constants";
 import { Editor } from "@monaco-editor/react";
@@ -11,6 +10,10 @@ import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
 import ShareSnippetDialog from "./share-snippet-dialog";
 import LiveShareSnippetDialog from "./live-share-snippet-dialog";
+import { useProblemEditorStore } from "@/store/useProblemStore";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
+import { Id } from "../../../../../convex/_generated/dataModel";
 
 type Participant = {
   email: string;
@@ -18,7 +21,10 @@ type Participant = {
   canRunCode: boolean;
 };
 
-function EditorPanel() {
+function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
+  const problemData = useQuery(api.problems.getProblem, {
+    problemId: problemId,
+  });
   const clerk = useClerk();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isLiveShareDialogOpen, setIsLiveShareDialogOpen] = useState(false);
@@ -26,10 +32,22 @@ function EditorPanel() {
     liveShareCode: string;
     participants: Participant[];
   }>(null);
-  const { language, theme, fontSize, editor, setFontSize, setEditor } =
-    useCodeEditorStore();
+  const {
+    language,
+    theme,
+    fontSize,
+    editor,
+    setFontSize,
+    setEditor,
+    getProblemWithId,
+  } = useProblemEditorStore();
 
   const mounted = useMounted();
+
+  useEffect(() => {
+    if (!problemData) return;
+    getProblemWithId(problemData);
+  }, [problemData]);
 
   useEffect(() => {
     const savedCode = localStorage.getItem(`editor-code-${language}`);
@@ -45,7 +63,7 @@ function EditorPanel() {
   const handleRefresh = () => {
     const defaultCode = LANGUAGE_CONFIG[language].defaultCode;
     if (editor) editor.setValue(defaultCode);
-    localStorage.removeItem(`editor-code-${language}`);
+    setEditor(editor);
   };
 
   const handleEditorChange = (value: string | undefined) => {

@@ -1,5 +1,5 @@
 import { LANGUAGE_CONFIG } from "@/app/(root)/_constants";
-import { ProblemState } from "@/types";
+import { Problem, ProblemState } from "@/types";
 import { Monaco } from "@monaco-editor/react";
 import { create } from "zustand";
 
@@ -32,16 +32,27 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
     isRunning: false,
     error: null,
     editor: null,
+    currentTab: "description",
     executionResult: null,
-    runtimes: [],
-    selectedVersion: "18.15.0",
+    loadingProblem: false, // Track loading state of problem
+    currentProblemId: null, // Store the ID of the current problem
+    currentProblem: null, // Store the problem data
 
     getCode: () => get().editor?.getValue() || "",
 
     setEditor: (editor: Monaco) => {
-      const savedCode = localStorage.getItem(`editor-code-${get().language}`);
-      if (savedCode) editor.setValue(savedCode);
+      if (!editor) return;
       set({ editor });
+    },
+
+    loadDefaultProblemCode: () => {
+      const savedCode = get().currentProblem?.languages.find(
+        ({ language }) =>
+          get().language.toLowerCase() === language.toLocaleLowerCase()
+      );
+      console.log(savedCode);
+      console.log(get().editor);
+      get().editor?.setValue(savedCode?.starterTemplate);
     },
 
     setTheme: (theme: string) => {
@@ -60,16 +71,15 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
         localStorage.setItem(`editor-code-${get().language}`, currentCode);
       }
 
-      const savedVersion =
-        localStorage.getItem(`editor-${language}-version`) ||
-        LANGUAGE_CONFIG[language]?.pistonRuntime.version;
+      const savedVersion = LANGUAGE_CONFIG[language]?.pistonRuntime.version;
 
       localStorage.setItem(`editor-${language}-version`, savedVersion);
       localStorage.setItem("editor-language", language);
 
+      get().loadDefaultProblemCode();
+
       set({
         language,
-        selectedVersion: savedVersion,
         output: "",
         error: null,
       });
@@ -78,6 +88,10 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
     runCode: async () => {
       const { language, getCode } = get();
       const code = getCode();
+
+      set({
+        currentTab: "output",
+      });
 
       if (!code) {
         set({ error: "Please enter some code" });
@@ -147,6 +161,23 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
         });
       } finally {
         set({ isRunning: false });
+      }
+    },
+
+    getProblemWithId: async (problemData: Problem) => {
+      set({ loadingProblem: true, currentProblemId: problemData._id });
+
+      try {
+        set({
+          currentProblem: problemData,
+          loadingProblem: false,
+        });
+      } catch (error) {
+        console.error("Error fetching problem:", error);
+        set({
+          loadingProblem: false,
+          error: "Error fetching problem data",
+        });
       }
     },
   };

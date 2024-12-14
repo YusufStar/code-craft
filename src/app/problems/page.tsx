@@ -1,42 +1,43 @@
 "use client";
-
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useState } from "react";
-import SnippetsPageSkeleton from "./_components/SnippetsPageSkeleton";
 import NavigationHeader from "@/components/NavigationHeader";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Code, Grid, Layers, Search, Tag, X } from "lucide-react";
-import SnippetCard from "./_components/SnippetCard";
+import { BookOpen, Code, Grid, Search, Tag, X } from "lucide-react";
+import ProblemsPageSkeleton from "./_components/ProblemsPageSkeleton";
+import ProblemCard from "./_components/ProblemCard";
 
-function SnippetsPage() {
-  const snippets = useQuery(api.snippets.getSnippets);
+function ProblemsPage() {
+  const problems = useQuery(api.problems.getProblems);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
 
   // loading state
-  if (snippets === undefined) {
+  if (problems === undefined) {
     return (
       <div className="min-h-screen">
         <NavigationHeader />
-        <SnippetsPageSkeleton />
+        <ProblemsPageSkeleton />
       </div>
     );
   }
 
-  const languages = [...new Set(snippets.map((s) => s.language))];
+  const languages = Array.from(
+    new Set(problems.flatMap((s) => s.languages.map((lang) => lang.language)))
+  );
   const popularLanguages = languages.slice(0, 5);
 
-  const filteredSnippets = snippets.filter((snippet) => {
+  const filteredProblems = problems.filter((snippet) => {
     const matchesSearch =
       snippet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      snippet.language.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      snippet.userName.toLowerCase().includes(searchQuery.toLowerCase());
+      snippet.description.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesLanguage =
-      !selectedLanguage || snippet.language === selectedLanguage;
+      !selectedLanguage ||
+      snippet.languages.some((lang) => lang.language === selectedLanguage);
 
     return matchesSearch && matchesLanguage;
   });
@@ -139,7 +140,7 @@ function SnippetsPage() {
 
             <div className="ml-auto flex items-center gap-3">
               <span className="text-sm text-gray-500">
-                {filteredSnippets.length} snippets found
+                {filteredProblems.length} problem found
               </span>
 
               {/* View Toggle */}
@@ -154,22 +155,12 @@ function SnippetsPage() {
                 >
                   <Grid className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => setView("list")}
-                  className={`p-2 rounded-md transition-all ${
-                    view === "list"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "text-gray-400 hover:text-gray-300 hover:bg-[#262637]"
-                  }`}
-                >
-                  <Layers className="w-4 h-4" />
-                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Snippets Grid */}
+        {/* problems Grid */}
         <motion.div
           className={`grid gap-6 ${
             view === "grid"
@@ -179,14 +170,14 @@ function SnippetsPage() {
           layout
         >
           <AnimatePresence mode="popLayout">
-            {filteredSnippets.map((snippet) => (
-              <SnippetCard key={snippet._id} snippet={snippet} />
+            {filteredProblems.map((problem) => (
+              <ProblemCard key={problem._id} problem={problem} />
             ))}
           </AnimatePresence>
         </motion.div>
 
         {/* edge case: empty state */}
-        {filteredSnippets.length === 0 && (
+        {filteredProblems.length === 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -200,12 +191,12 @@ function SnippetsPage() {
                 <Code className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-xl font-medium text-white mb-3">
-                No snippets found
+                No problems found
               </h3>
               <p className="text-gray-400 mb-6">
                 {searchQuery || selectedLanguage
                   ? "Try adjusting your search query or filters"
-                  : "Be the first to share a code snippet with the community"}
+                  : "Be the first to share a code problem with the community"}
               </p>
 
               {(searchQuery || selectedLanguage) && (
@@ -228,4 +219,4 @@ function SnippetsPage() {
     </div>
   );
 }
-export default SnippetsPage;
+export default ProblemsPage;

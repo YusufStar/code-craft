@@ -66,11 +66,11 @@ export const getProblems = query({
 });
 
 export const getProblem = query({
-  args: { problemId: v.string() },
+  args: { problemId: v.id("problems") },
   handler: async ({ db }, { problemId }) => {
     const problem = await db
       .query("problems")
-      .withIndex("by_title", (q) => q.eq("title", problemId))
+      .withIndex("by_id", (q) => q.eq("_id", problemId))
       .first();
 
     return problem;

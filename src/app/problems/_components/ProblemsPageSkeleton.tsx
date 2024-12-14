@@ -31,7 +31,7 @@ const CardSkeleton = () => (
   </div>
 );
 
-export default function SnippetsPageSkeleton() {
+export default function ProblemsPageSkeleton() {
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
       {/* Ambient background with loading pulse */}

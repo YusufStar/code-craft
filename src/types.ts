@@ -76,13 +76,24 @@ export interface ProblemState {
   fontSize: number;
   editor: Monaco | null;
   executionResult: ExecutionResult | null;
+  currentTab: "output" | "description";
 
+  // New properties for problem management
+  loadingProblem: boolean; // Tracks loading state of problem
+  currentProblemId: string | null; // Stores the ID of the current problem
+  currentProblem: Problem | null; // Stores the fetched problem's data
+
+  // Methods
   setEditor: (editor: Monaco) => void;
   getCode: () => string;
   setLanguage: (language: string) => void;
   setTheme: (theme: string) => void;
   setFontSize: (fontSize: number) => void;
   runCode: () => Promise<void>;
+  loadDefaultProblemCode: () => Promise<void>;
+
+  // New method to fetch problem by ID
+  getProblemWithId: (problemData: Problem) => Promise<void>;
 }
 
 export interface Snippet {
@@ -93,4 +104,16 @@ export interface Snippet {
   code: string;
   title: string;
   userName: string;
+}
+
+export interface Problem {
+  _id: Id<"problems">; // Unique identifier for the problem
+  _creationTime: number; // Creation timestamp
+  title: string; // Problem title
+  description: string; // Problem description
+  expectedOutput: string; // Expected output for the problem
+  languages: {
+    language: string; // Language name
+    starterTemplate: string; // Starter template for the language
+  }[]; // Array of language objects
 }
