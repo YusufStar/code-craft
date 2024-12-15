@@ -3,8 +3,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Share,
-  Sparkles,
+  DockIcon,
   Terminal,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +20,7 @@ import remarkBreaks from "remark-breaks";
 import CodeBlock from "./CodeBlock";
 
 function OutputPanel() {
-  const { output, error, isRunning, currentProblem, currentTab, language } =
+  const { output, error, isRunning, currentProblem, currentTab } =
     useProblemEditorStore();
   const [underlineStyle, setUnderlineStyle] = useState({ width: 0, left: 0 });
 
@@ -36,8 +35,6 @@ function OutputPanel() {
       setUnderlineStyle({ width: offsetWidth, left: offsetLeft });
     }
   }, [currentTab]);
-
-  const isSolutionCorrect = false;
 
   return (
     <div className="relative h-full bg-[#181825] rounded-xl p-6 ring-1 ring-gray-800/50">
@@ -80,10 +77,10 @@ function OutputPanel() {
        duration-200 border border-gray-800/50 hover:border-gray-700`}
         >
           <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ">
-            <Sparkles className="w-4 h-4 text-blue-400" />
+            <DockIcon className="w-4 h-4 text-blue-400" />
           </div>
           <span className="text-sm font-medium text-gray-300 group-hover:text-gray-100 transition-colors duration-200">
-            AI Assistant
+            Description
           </span>
         </div>
 

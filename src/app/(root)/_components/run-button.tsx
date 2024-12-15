@@ -13,15 +13,9 @@ import { useSocketStore } from "@/store/useSocketStore";
 
 function RunButton() {
   const { user } = useUser();
-  const {
-    runCode,
-    language,
-    isRunning,
-    livePermission,
-    setLanguage,
-    setVersion,
-  } = useCodeEditorStore();
-  const { roomId, setRoomId } = useSocketStore();
+  const { runCode, language, isRunning, setLanguage, setVersion } =
+    useCodeEditorStore();
+  const { setRoomId } = useSocketStore();
   const saveExecution = useMutation(api.codeExecutions.saveExecution);
   const controlExecution = useMutation(api.codeExecutions.controlExecution);
 
@@ -39,7 +33,7 @@ function RunButton() {
         executionResult: {
           code: useCodeEditorStore.getState().getCode(),
           error: msg,
-          output: "",
+          output: null,
         },
       });
       setRoomId(null);
@@ -53,7 +47,17 @@ function RunButton() {
       await saveExecution({
         language,
         code: result.code,
-        output: result.output || undefined,
+        output:
+          result.output?.detailConfirm
+            .map(
+              (item) => `
+              ---------------------divider------------------------
+              params: ${item.params}\n
+              response: ${item.response}\n
+              expectedResponse: ${item.expectedResponse}\n
+              ---------------------divider-------------------------`
+            )
+            .join("\n") || undefined,
         error: result.error || undefined,
       });
     }
