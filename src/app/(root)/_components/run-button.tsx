@@ -47,17 +47,7 @@ function RunButton() {
       await saveExecution({
         language,
         code: result.code,
-        output:
-          result.output?.detailConfirm
-            .map(
-              (item) => `
-              ---------------------divider------------------------
-              params: ${item.params}\n
-              response: ${item.response}\n
-              expectedResponse: ${item.expectedResponse}\n
-              ---------------------divider-------------------------`
-            )
-            .join("\n") || undefined,
+        output: result.output || undefined,
         error: result.error || undefined,
       });
     }

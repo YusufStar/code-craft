@@ -3,7 +3,11 @@ import OutputPanel from "./_components/output-panel";
 import EditorPanel from "./_components/editor-panel";
 import { Id } from "../../../../convex/_generated/dataModel";
 
-export default function Home({ params: { id } }: { params: { id: Id<"problems"> } }) {
+type ProblemsPageParams = { id: Id<"problems"> };
+
+export default function Home({ params }: { params: ProblemsPageParams }) {
+
+  const { id } = params; // Access id synchronously
   return (
     <div className="min-h-screen">
       <div className="max-w-[1800px] mx-auto p-4">

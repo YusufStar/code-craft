@@ -32,6 +32,10 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
   }, []);
 
   useEffect(() => {
+    setLanguage("javascript")
+  }, [])
+
+  useEffect(() => {
     const updateLang = (langId: string) => {
       if (!socket) return;
       setLanguage(langId);

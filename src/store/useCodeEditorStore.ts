@@ -70,11 +70,12 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
         localStorage.setItem(`editor-code-${get().language}`, currentCode);
       }
 
-      const savedVersion =
-        localStorage.getItem(`editor-${language}-version`) ||
-        LANGUAGE_CONFIG[language]?.pistonRuntime.version;
+      const savedVersion = localStorage.getItem(`editor-${language}-version`);
 
-      localStorage.setItem(`editor-${language}-version`, savedVersion);
+      localStorage.setItem(
+        `editor-${language}-version`,
+        savedVersion ?? LANGUAGE_CONFIG[language]?.pistonRuntime.version
+      );
       localStorage.setItem("editor-language", language);
 
       set({

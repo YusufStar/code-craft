@@ -33,6 +33,12 @@ export interface ExecuteCodeResponse {
 
 export interface ExecutionResult {
   code: string;
+  output: string | null;
+  error: string | null;
+}
+
+export interface ProblemExecutionResult {
+  code: string;
   output: {
     submissionConfirm: boolean;
     detailConfirm: {
@@ -89,7 +95,7 @@ export interface ProblemState {
   theme: string;
   fontSize: number;
   editor: Monaco | null;
-  executionResult: ExecutionResult | null;
+  executionResult: ProblemExecutionResult | null;
   currentTab: "output" | "description";
 
   // New properties for problem management

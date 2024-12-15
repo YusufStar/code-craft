@@ -3,7 +3,6 @@ import { create } from "zustand";
 import { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
 
-// Socket store'ı tanımlıyoruz
 type SocketStore = {
   socket: Socket | null;
   roomId: string | null;
@@ -17,12 +16,11 @@ export const useSocketStore = create<SocketStore>((set) => ({
   roomId: null,
   setSocket: (socket) => set({ socket }),
   disconnectSocket: () => set({ socket: null, roomId: null }),
-  setRoomId: (roomId: string) => set({ roomId: roomId }),
+  setRoomId: (roomId: string | null) => set({ roomId: roomId }),
 }));
 
-// Socket'i başlatan bir fonksiyon
 export const initializeSocket = () => {
-  const socket = io("http://localhost:3000", {
+  const socket = io(process.env.NEXT_PUBLIC_SOCKET_IP, {
     transports: ["websocket"],
   });
 
