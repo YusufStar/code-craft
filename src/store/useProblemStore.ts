@@ -5,6 +5,7 @@ import { create } from "zustand";
 
 const getInitialState = () => {
   if (typeof window === "undefined") {
+    console.log("Running on server");
     return {
       language: "javascript",
       fontSize: 14,
@@ -12,6 +13,7 @@ const getInitialState = () => {
     };
   }
 
+  console.log("Running on client");
   const savedLanguage = localStorage.getItem("editor-language") || "javascript";
   const savedTheme = localStorage.getItem("editor-theme") || "vs-dark";
   const savedFontSize = localStorage.getItem("editor-fontSize") || 14;
@@ -41,23 +43,45 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
     getCode: () => get().editor?.getValue() || "",
 
     setEditor: (editor: Monaco) => {
-      if (!editor) return;
+      if (!editor) {
+        console.error("Monaco editor is not initialized");
+        return;
+      }
       set({ editor });
     },
 
     loadDefaultProblemCode: () => {
-      const savedCode = get().currentProblem?.languages.find(
+      const savedCode = get().currentProblem?.languages?.find(
         ({ language }) =>
           get().language.toLowerCase() === language.toLocaleLowerCase()
       );
-      get().editor?.setValue(savedCode?.starterTemplate);
+      if (!savedCode?.starterTemplate) {
+        set({
+          language:
+            get().currentProblem?.languages[0].language.toLocaleLowerCase(),
+        });
+      }
+      get().editor?.setValue(
+        savedCode?.starterTemplate ??
+          get().currentProblem?.languages[0].starterTemplate
+      );
+      return;
     },
     getDefaultProblemCode: () => {
       const savedCode = get().currentProblem?.languages.find(
         ({ language }) =>
           get().language.toLowerCase() === language.toLocaleLowerCase()
       );
-      return savedCode?.starterTemplate || "";
+      if (!savedCode?.starterTemplate) {
+        set({
+          language:
+            get().currentProblem?.languages[0].language.toLocaleLowerCase(),
+        });
+      }
+      return (
+        savedCode?.starterTemplate ??
+        get().currentProblem?.languages[0].starterTemplate
+      );
     },
 
     setTheme: (theme: string) => {
@@ -76,7 +100,12 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
         localStorage.setItem(`editor-code-${get().language}`, currentCode);
       }
 
-      const savedVersion = LANGUAGE_CONFIG[language]?.pistonRuntime.version;
+      const languageConfig = LANGUAGE_CONFIG[language];
+      if (!languageConfig) {
+        console.error(`Language configuration for ${language} is missing`);
+        return;
+      }
+      const savedVersion = languageConfig.pistonRuntime.version;
 
       localStorage.setItem(`editor-${language}-version`, savedVersion);
       localStorage.setItem("editor-language", language);
@@ -104,7 +133,12 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
       set({ isRunning: true, error: null, output: null });
 
       try {
-        const runtime = LANGUAGE_CONFIG[language].pistonRuntime;
+        const languageConfig = LANGUAGE_CONFIG[language];
+        if (!languageConfig) {
+          console.error(`Language configuration for ${language} is missing`);
+          return;
+        }
+        const runtime = languageConfig.pistonRuntime;
         const selectedLanguage = currentProblem?.languages.find(
           ({ language: lang }) => lang.toLowerCase() === language.toLowerCase()
         );
@@ -124,11 +158,8 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
           const { key, value: expectedValue } =
             selectedLanguage.expectedOutput[i];
 
-          if (LANGUAGE_CONFIG[language].outputWrapper === undefined) return;
-          const modifiedCode = LANGUAGE_CONFIG[language].outputWrapper(
-            code,
-            key
-          );
+          if (languageConfig.outputWrapper === undefined) return;
+          const modifiedCode = languageConfig.outputWrapper(code, key);
 
           const response = await fetch(
             "https://emkc.org/api/v2/piston/execute",
@@ -147,6 +178,9 @@ export const useProblemEditorStore = create<ProblemState>((set, get) => {
 
           const data = await response.json();
           const actualOutput = data.run?.output?.trim() || "";
+          if (!actualOutput) {
+            console.error("Invalid API response: Output is empty or missing");
+          }
           const result = (actualOutput as string).split("\n");
 
           const isCorrect = actualOutput.trim() === expectedValue.trim();
