@@ -1,9 +1,8 @@
 import Header from "./_components/header";
 import OutputPanel from "./_components/output-panel";
 import EditorPanel from "./_components/editor-panel";
-import { Id } from "../../../../convex/_generated/dataModel";
 
-type ProblemsPageParams = { id: Id<"problems"> };
+type ProblemsPageParams = { id: any };
 
 export default function Home({ params }: { params: ProblemsPageParams }) {
 
