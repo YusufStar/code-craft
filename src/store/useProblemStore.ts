@@ -25,7 +25,9 @@ const getInitialState = () => {
   };
 };
 
-export const useProblemEditorStore = create<ProblemState>((set, get) => {
+export const useProblemEditorStore = create<ProblemState>(
+  //@ts-expect-error: Error
+  (set, get) => {
   const initialState = getInitialState();
 
   return {

@@ -3,7 +3,13 @@ import OutputPanel from "./_components/output-panel";
 import EditorPanel from "./_components/editor-panel";
 import { Id } from "../../../../convex/_generated/dataModel";
 
-export default function Home({ params: { id } }: { params: { id: Id<"problems"> } }) {
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ id: Id<"problems"> }>;
+}) {
+  const { id } = await params; // Await the params object
+
   return (
     <div className="min-h-screen">
       <div className="max-w-[1800px] mx-auto p-4">
