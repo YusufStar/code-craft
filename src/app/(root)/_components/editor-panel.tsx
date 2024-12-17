@@ -12,12 +12,14 @@ import {
   ShareIcon,
   TypeIcon,
 } from "lucide-react";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
 import ShareSnippetDialog from "./share-snippet-dialog";
 import LiveShareSnippetDialog from "./live-share-snippet-dialog";
 import { useSocketStore } from "@/store/useSocketStore";
+import { useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 
 type Participant = {
   email: string;
@@ -35,6 +37,12 @@ function EditorPanel() {
     liveShareCode: string;
     participants: Participant[];
   }>(null);
+  const { user } = useUser();
+  const getCode = useMutation(api.codes.getCode);
+  const saveOrUpdateCode = useMutation(api.codes.createOrUpdateCode);
+  const [loading, setLoading] = useState(false);
+  const [loadedLanguage, setLoadedLanguage] = useState("");
+
   const {
     language,
     theme,
@@ -44,14 +52,25 @@ function EditorPanel() {
     setEditor,
     livePermission,
     setLivePermission,
+    setCode,
   } = useCodeEditorStore();
 
   const mounted = useMounted();
 
+  const loadCode = async () => {
+    setLoading(true);
+    if (!user) return;
+    if (loadedLanguage !== language) {
+      setLoadedLanguage(language);
+      const res = await getCode({ userId: user?.id, language: language });
+      if (!res) return;
+      setCode(res.code ?? "");
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const savedCode = localStorage.getItem(`editor-code-${language}`);
-    const newCode = savedCode || LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(newCode);
+    if (editor) loadCode();
   }, [language, editor]);
 
   useEffect(() => {
@@ -112,14 +131,23 @@ function EditorPanel() {
   }, [setFontSize]);
 
   const handleRefresh = () => {
-    const defaultCode = LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(defaultCode);
-    localStorage.removeItem(`editor-code-${language}`);
+    console.log("refresh");
   };
 
-  const handleEditorChange = (value: string | undefined) => {
-    console.log(value);
-    localStorage.setItem(`editor-code-${language}`, value as string);
+  const saveCode = async (value: string) => {
+    if (!editor || !user) return;
+    await saveOrUpdateCode({
+      userId: user.id,
+      language: language,
+      code: value,
+    });
+  };
+
+  const handleEditorChange = async (value: string | undefined) => {
+    if (typeof value === "string") {
+      await saveCode(value);
+    }
+
     if (livePermission !== null) {
       if (!livePermission?.canEdit) return;
 
@@ -235,12 +263,15 @@ function EditorPanel() {
         <div className="relative h-[600px] group rounded-xl overflow-hidden ring-1 ring-white/[0.05]">
           {clerk.loaded && (
             <Editor
+              className={`${loading ? "hidden" : "block"} w-full h-full`}
               height="600px"
               language={LANGUAGE_CONFIG[language].monacoLanguage}
               onChange={handleEditorChange}
               theme={theme}
               beforeMount={defineMonacoThemes}
-              onMount={(editor) => setEditor(editor)}
+              onMount={(editor) => {
+                setEditor(editor);
+              }}
               options={{
                 minimap: { enabled: false },
                 fontSize,
@@ -265,7 +296,7 @@ function EditorPanel() {
             />
           )}
 
-          {!clerk.loaded && <EditorPanelSkeleton />}
+          {!clerk.loaded || (loading && <EditorPanelSkeleton />)}
         </div>
       </div>
 

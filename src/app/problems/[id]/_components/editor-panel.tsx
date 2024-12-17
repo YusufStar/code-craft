@@ -5,13 +5,13 @@ import { Editor } from "@monaco-editor/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { RotateCcwIcon, TypeIcon } from "lucide-react";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
 import ShareSnippetDialog from "./share-snippet-dialog";
 import LiveShareSnippetDialog from "./live-share-snippet-dialog";
 import { useProblemEditorStore } from "@/store/useProblemStore";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -26,12 +26,18 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
     problemId: problemId,
   });
   const clerk = useClerk();
+  const { user } = useUser();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isLiveShareDialogOpen, setIsLiveShareDialogOpen] = useState(false);
   const [liveShare, setLiveShare] = useState<null | {
     liveShareCode: string;
     participants: Participant[];
   }>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadedLanguage, setLoadedLanguage] = useState("");
+
+  const saveOrUpdateCode = useMutation(api.codes.createOrUpdateCode);
+
   const {
     language,
     theme,
@@ -40,10 +46,26 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
     setFontSize,
     setEditor,
     getProblemWithId,
-    loadDefaultProblemCode,
+    setCode,
   } = useProblemEditorStore();
 
   const mounted = useMounted();
+
+  const loadCode = async () => {
+    setLoading(true);
+    if (!user) return;
+    if (loadedLanguage !== language && problemData) {
+      setLoadedLanguage(language);
+      const finded = problemData.languages.find(
+        (l) => l.language.toLowerCase() === language.toLowerCase()
+      );
+      setCode(finded?.starterTemplate ?? "");
+      if (finded?.starterTemplate) {
+        await saveCode(finded?.starterTemplate);
+      }
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!problemData) return;
@@ -51,9 +73,7 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
   }, [problemData]);
 
   useEffect(() => {
-    if (editor) {
-      loadDefaultProblemCode();
-    }
+    if (editor && problemData) loadCode();
   }, [language, problemData]);
 
   useEffect(() => {
@@ -62,12 +82,21 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
   }, [setFontSize]);
 
   const handleRefresh = () => {
-    loadDefaultProblemCode();
+    console.log("refresh");
+  };
+
+  const saveCode = async (value: string) => {
+    if (!editor || !user || (!problemId && loadedLanguage === language)) return;
+    await saveOrUpdateCode({
+      userId: user.id,
+      language: language,
+      code: value,
+      problemId: problemId,
+    });
   };
 
   const handleEditorChange = (value: string | undefined) => {
-    if (!value) return;
-    localStorage.setItem(`editor-code-${language}`, value);
+    console.log("editor changed value: ",value);
   };
 
   const handleFontSizeChange = (newSize: number) => {
@@ -136,6 +165,7 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
         <div className="relative h-[600px] group rounded-xl overflow-hidden ring-1 ring-white/[0.05]">
           {clerk.loaded && (
             <Editor
+              className={`${!problemData || loading ? "hidden" : "block"} w-full h-full`}
               height="600px"
               language={LANGUAGE_CONFIG[language].monacoLanguage}
               onChange={handleEditorChange}
@@ -166,7 +196,7 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
             />
           )}
 
-          {(!clerk.loaded || !problemData) && <EditorPanelSkeleton />}
+          {(!clerk.loaded || loading) && <EditorPanelSkeleton />}
         </div>
       </div>
 

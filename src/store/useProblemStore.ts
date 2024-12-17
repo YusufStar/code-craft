@@ -52,40 +52,6 @@ export const useProblemEditorStore = create<ProblemState>(
       set({ editor });
     },
 
-    loadDefaultProblemCode: () => {
-      const savedCode = get().currentProblem?.languages?.find(
-        ({ language }) =>
-          get().language.toLowerCase() === language.toLocaleLowerCase()
-      );
-      if (!savedCode?.starterTemplate) {
-        set({
-          language:
-            get().currentProblem?.languages[0].language.toLocaleLowerCase(),
-        });
-      }
-      get().editor?.setValue(
-        savedCode?.starterTemplate ??
-          get().currentProblem?.languages[0].starterTemplate
-      );
-      return;
-    },
-    getDefaultProblemCode: () => {
-      const savedCode = get().currentProblem?.languages.find(
-        ({ language }) =>
-          get().language.toLowerCase() === language.toLocaleLowerCase()
-      );
-      if (!savedCode?.starterTemplate) {
-        set({
-          language:
-            get().currentProblem?.languages[0].language.toLocaleLowerCase(),
-        });
-      }
-      return (
-        savedCode?.starterTemplate ??
-        get().currentProblem?.languages[0].starterTemplate
-      );
-    },
-
     setTheme: (theme: string) => {
       localStorage.setItem("editor-theme", theme);
       set({ theme: theme });
@@ -97,19 +63,6 @@ export const useProblemEditorStore = create<ProblemState>(
     },
 
     setLanguage: (language: string) => {
-      const currentCode = get().editor?.getValue();
-      if (currentCode) {
-        localStorage.setItem(`editor-code-${get().language}`, currentCode);
-      }
-
-      const languageConfig = LANGUAGE_CONFIG[language];
-      if (!languageConfig) {
-        console.error(`Language configuration for ${language} is missing`);
-        return;
-      }
-      const savedVersion = languageConfig.pistonRuntime.version;
-
-      localStorage.setItem(`editor-${language}-version`, savedVersion);
       localStorage.setItem("editor-language", language);
 
       set({
@@ -231,6 +184,12 @@ export const useProblemEditorStore = create<ProblemState>(
           loadingProblem: false,
           error: "Error fetching problem data",
         });
+      }
+    },
+
+    setCode: (code: string) => {
+      if (get().editor) {
+        get().editor?.setValue(code);
       }
     },
   };

@@ -70,4 +70,18 @@ export default defineSchema({
   })
     .index("by_problem_id", ["problemId"])
     .index("by_user_id", ["userId"]),
+
+  codes: defineTable({
+    userId: v.string(),
+    code: v.string(),
+    language: v.string(),
+    problemId: v.optional(v.id("problems")),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_language_and_user_id", ["language", "userId"])
+    .index("by_problem_id_and_language_id_and_user_id", [
+      "problemId",
+      "language",
+      "userId",
+    ]),
 });

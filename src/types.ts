@@ -78,6 +78,7 @@ export interface CodeEditorState {
   fetchRuntimes: () => Promise<void>;
   setLivePermission: (dt: any) => void;
   setVersion: (version: string) => void;
+  setCode: (code: string) => void;
 }
 
 export interface ProblemState {
@@ -112,6 +113,7 @@ export interface ProblemState {
   runCode: () => Promise<void>;
   loadDefaultProblemCode: () => void;
   getDefaultProblemCode: () => string;
+  setCode: (code: string) => void;
 
   // New method to fetch problem by ID
   getProblemWithId: (problemData: Problem) => Promise<void>;

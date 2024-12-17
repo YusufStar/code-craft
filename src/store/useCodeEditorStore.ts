@@ -49,9 +49,9 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     getCode: () => get().editor?.getValue() || "",
 
     setEditor: (editor: Monaco) => {
-      const savedCode = localStorage.getItem(`editor-code-${get().language}`);
-      if (savedCode) editor.setValue(savedCode);
-      set({ editor });
+      if (editor) {
+        set({ editor });
+      }
     },
 
     setTheme: (theme: string) => {
@@ -65,11 +65,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     },
 
     setLanguage: (language: string) => {
-      const currentCode = get().editor?.getValue();
-      if (currentCode) {
-        localStorage.setItem(`editor-code-${get().language}`, currentCode);
-      }
-
       const savedVersion = localStorage.getItem(`editor-${language}-version`);
 
       localStorage.setItem(
@@ -84,6 +79,12 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
         output: "",
         error: null,
       });
+    },
+
+    setCode: (code: string) => {
+      if (get().editor) {
+        get().editor?.setValue(code);
+      }
     },
 
     setVersion: (version: string) => {
@@ -103,7 +104,8 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     },
 
     runCode: async () => {
-      const { language, selectedVersion, getCode } = get();
+      const { language, getCode } = get();
+      // TODO: get state selectedVersion
       const code = getCode();
 
       if (!code) {
@@ -122,7 +124,10 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
           },
           body: JSON.stringify({
             language: runtime.language,
-            version: selectedVersion || runtime.version,
+            // TODO: FIX all the version errors.
+            // version: selectedVersion || runtime.version,
+
+            version: runtime.version,
             files: [{ content: code }],
           }),
         });
