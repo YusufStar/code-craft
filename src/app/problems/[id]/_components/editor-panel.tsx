@@ -9,17 +9,10 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
 import ShareSnippetDialog from "./share-snippet-dialog";
-import LiveShareSnippetDialog from "./live-share-snippet-dialog";
 import { useProblemEditorStore } from "@/store/useProblemStore";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
-
-type Participant = {
-  email: string;
-  canEdit: boolean;
-  canRunCode: boolean;
-};
 
 function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
   const problemData = useQuery(api.problems.getProblem, {
@@ -28,11 +21,6 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
   const clerk = useClerk();
   const { user } = useUser();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const [isLiveShareDialogOpen, setIsLiveShareDialogOpen] = useState(false);
-  const [liveShare, setLiveShare] = useState<null | {
-    liveShareCode: string;
-    participants: Participant[];
-  }>(null);
   const [loading, setLoading] = useState(false);
   const [loadedLanguage, setLoadedLanguage] = useState("");
 
@@ -202,13 +190,6 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
 
       {isShareDialogOpen && (
         <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />
-      )}
-      {isLiveShareDialogOpen && (
-        <LiveShareSnippetDialog
-          liveShare={liveShare}
-          setLiveShare={setLiveShare}
-          onClose={() => setIsLiveShareDialogOpen(false)}
-        />
       )}
     </div>
   );

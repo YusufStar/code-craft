@@ -24,7 +24,7 @@ import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import QuestionTab from "./question-tab";
-import LiveTab from "@/app/problems/[id]/_components/LiveTab";
+import LiveTab from "./LiveTab";
 
 function OutputPanel() {
   const router = useRouter();
@@ -183,7 +183,7 @@ function OutputPanel() {
             className={`group cursor-pointer relative flex items-center gap-2 px-2 py-1 bg-[#1e1e2e]/80 
       rounded-lg transition-all
       hover:opacity-100
-      ${currentTab === "ai" ? "opacity-100" : "opacity-50"}
+      ${currentTab === "question" ? "opacity-100" : "opacity-50"}
        duration-200 border border-gray-800/50 hover:border-gray-700`}
           >
             <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ">
@@ -201,8 +201,9 @@ function OutputPanel() {
             onClick={() => setCurrentTab("live")}
             className={`group cursor-pointer relative flex items-center gap-2 px-2 py-1 bg-[#1e1e2e]/80 
       rounded-lg transition-all
+      animate-bounce
       hover:opacity-100
-      ${currentTab === "ai" ? "opacity-100" : "opacity-50"}
+      ${currentTab === "live" ? "opacity-100" : "opacity-50"}
        duration-200 border border-gray-800/50 hover:border-gray-700`}
           >
             <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ">

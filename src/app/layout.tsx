@@ -4,7 +4,6 @@ import "./globals.css";
 import ConvexProvider from "@/components/providers/convex-provider";
 import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
-import SocketProvider from "@/components/providers/socket-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -32,9 +31,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-gray-100 flex flex-col`}
       >
-        <ConvexProvider>
-          <SocketProvider>{children}</SocketProvider>
-        </ConvexProvider>
+        <ConvexProvider>{children}</ConvexProvider>
 
         <Footer />
 

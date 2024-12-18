@@ -141,3 +141,28 @@ export interface Problem {
     }[]; // Expected output for the problem
   }[]; // Array of language objects
 }
+
+export type CreatedUser = {
+  _id: Id<"users">;
+  email: string;
+  isPro: boolean;
+  name: string;
+  proSince: number;
+  userId: string;
+};
+
+export type RoomData = {
+  _id: Id<"rooms">;
+  createdUserId: CreatedUser;
+  isPrivate: boolean;
+  name: string;
+  participants: CreatedUser[];
+  password: string;
+  roomCode: string;
+};
+
+export interface LiveStore {
+  room: RoomData | null;
+
+  setRoom: (room: RoomData | null) => void;
+}

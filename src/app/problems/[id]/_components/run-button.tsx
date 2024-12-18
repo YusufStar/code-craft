@@ -8,13 +8,11 @@ import { useMutation } from "convex/react";
 import { motion } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
 import { api } from "../../../../../convex/_generated/api";
-import { useSocketStore } from "@/store/useSocketStore";
 import { useProblemEditorStore } from "@/store/useProblemStore";
 
 function RunButton() {
   const { user } = useUser();
   const { runCode, language, isRunning, setLanguage } = useProblemEditorStore();
-  const { setRoomId } = useSocketStore();
   const saveExecution = useMutation(api.codeExecutions.saveExecution);
   const controlExecution = useMutation(api.codeExecutions.controlExecution);
 
@@ -34,7 +32,6 @@ function RunButton() {
           output: "",
         },
       });
-      setRoomId(null);
       return;
     }
 

@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ChevronDownIcon, Lock, Sparkles } from "lucide-react";
 import useMounted from "@/hooks/useMounted";
-import { useSocketStore } from "@/store/useSocketStore";
 
 function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +13,6 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
 
   const { language, setLanguage } = useCodeEditorStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { socket, roomId } = useSocketStore();
   const currentLanguageObj = LANGUAGE_CONFIG[language];
 
   useEffect(() => {
@@ -35,25 +33,8 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
     setLanguage("javascript")
   }, [])
 
-  useEffect(() => {
-    const updateLang = (langId: string) => {
-      if (!socket) return;
-      setLanguage(langId);
-      console.log(langId);
-    };
-
-    if (!socket) return;
-    socket.on("langUpdate", updateLang);
-
-    return () => {
-      socket.off("langUpdate", updateLang);
-    };
-  }, [socket, setLanguage]);
-
   const handleLanguageSelect = (langId: string) => {
     if (!hasAccess && langId !== "javascript") return;
-
-    socket?.emit("langChange", { lang: langId, roomId: roomId });
 
     setLanguage(langId);
     setIsOpen(false);

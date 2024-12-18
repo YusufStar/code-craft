@@ -5,46 +5,54 @@ import { defineMonacoThemes, LANGUAGE_CONFIG } from "../_constants";
 import { Editor } from "@monaco-editor/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import {
-  RotateCcwIcon,
-  ServerIcon,
-  SettingsIcon,
-  ShareIcon,
-  TypeIcon,
-} from "lucide-react";
+import { RotateCcwIcon, ShareIcon, TypeIcon } from "lucide-react";
 import { useClerk, useUser } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
 import ShareSnippetDialog from "./share-snippet-dialog";
-import LiveShareSnippetDialog from "./live-share-snippet-dialog";
-import { useSocketStore } from "@/store/useSocketStore";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-
-type Participant = {
-  email: string;
-  canEdit: boolean;
-  canRunCode: boolean;
-};
+import { useLiveStore } from "@/store/useLiveStore";
 
 function EditorPanel() {
   const clerk = useClerk();
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const [isLiveShareDialogOpen, setIsLiveShareDialogOpen] = useState(false);
-  const [liveShare, setLiveShare] = useState<null | {
-    liveShareCode: string;
-    participants: Participant[];
-  }>(null);
   const { user } = useUser();
+  const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
+
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const getCode = useMutation(api.codes.getCode);
   const saveOrUpdateCode = useMutation(api.codes.createOrUpdateCode);
   const [loading, setLoading] = useState(false);
   const [loadedLanguage, setLoadedLanguage] = useState("");
 
+  const { room } = useLiveStore();
+
+  const roomEditor = useQuery(api.room.getRoomEditor, {
+    roomId: room?._id ?? "",
+  });
+  const updateEditor = useMutation(api.room.updateEditor);
+
   const { language, theme, fontSize, editor, setFontSize, setEditor, setCode } =
     useCodeEditorStore();
 
   const mounted = useMounted();
+
+  useEffect(() => {
+    if (room?.createdUserId === userData?._id && room && userData && editor) {
+      updateEditor({
+        roomId: room._id,
+        userId: userData?._id,
+        language,
+        code: editor?.getValue() ?? "",
+      });
+    }
+  }, [room, language, editor, userData]);
+
+  useEffect(() => {
+    if (roomEditor && editor && roomEditor.code !== editor.getValue()) {
+      editor.setValue(roomEditor.code);
+    }
+  }, [roomEditor, room]);
 
   const loadCode = async () => {
     setLoading(true);
@@ -59,8 +67,8 @@ function EditorPanel() {
   };
 
   useEffect(() => {
-    if (editor) loadCode();
-  }, [language, editor]);
+    if (editor && !room) loadCode();
+  }, [language, editor, room]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
@@ -81,7 +89,7 @@ function EditorPanel() {
   };
 
   const handleEditorChange = async (value: string | undefined) => {
-    if (typeof value === "string") {
+    if (typeof value === "string" && !room) {
       await saveCode(value);
     }
   };
@@ -150,31 +158,6 @@ function EditorPanel() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setIsLiveShareDialogOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg overflow-hidden bg-gradient-to-r
-               from-blue-500 to-green-600 animate-pulse opacity-90 hover:opacity-100 transition-opacity"
-            >
-              {useSocketStore.getState().roomId ? (
-                <>
-                  <SettingsIcon className="size-4 text-white" />
-                  <span className="text-sm font-medium text-white ">
-                    Live Settings
-                  </span>
-                </>
-              ) : (
-                <>
-                  <ServerIcon className="size-4 text-white" />
-                  <span className="text-sm font-medium text-white ">
-                    Live Share
-                  </span>
-                </>
-              )}
-            </motion.button>
-
-            {/* Share Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
               onClick={() => setIsShareDialogOpen(true)}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg overflow-hidden bg-gradient-to-r
                from-blue-500 to-blue-600 opacity-90 hover:opacity-100 transition-opacity"
@@ -228,13 +211,6 @@ function EditorPanel() {
 
       {isShareDialogOpen && (
         <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />
-      )}
-      {isLiveShareDialogOpen && (
-        <LiveShareSnippetDialog
-          liveShare={liveShare}
-          setLiveShare={setLiveShare}
-          onClose={() => setIsLiveShareDialogOpen(false)}
-        />
       )}
     </div>
   );
