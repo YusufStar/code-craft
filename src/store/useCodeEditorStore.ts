@@ -10,7 +10,6 @@ const getInitialState = () => {
       fontSize: 14,
       theme: "vs-dark",
       selectedVersion: "18.15.0",
-      livePermission: null,
     };
   }
 
@@ -24,7 +23,6 @@ const getInitialState = () => {
     fontSize: Number(savedFontSize),
     runtimes: [],
     selectedVersion: "18.15.0",
-    livePermission: null,
   };
 };
 
@@ -40,11 +38,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     executionResult: null,
     runtimes: [],
     selectedVersion: "18.15.0",
-    livePermission: null,
-
-    setLivePermission: (dt) => {
-      set({ livePermission: dt });
-    },
 
     getCode: () => get().editor?.getValue() || "",
 

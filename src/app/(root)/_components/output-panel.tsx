@@ -3,17 +3,18 @@ import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 import {
   AlertTriangle,
   ArrowUpFromLine,
+  Book,
   CheckCircle,
   Clock,
   Code,
   Copy,
   Sparkles,
   Terminal,
+  Tv,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RunningCodeSkeleton from "./running-code-skeleton";
-import { useSocketStore } from "@/store/useSocketStore";
 import useAi from "@/hooks/useAi";
 import CommentContent from "./CommentContent";
 import { LANGUAGE_CONFIG } from "../_constants";
@@ -22,6 +23,8 @@ import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import QuestionTab from "./question-tab";
+import LiveTab from "@/app/problems/[id]/_components/LiveTab";
 
 function OutputPanel() {
   const router = useRouter();
@@ -29,11 +32,12 @@ function OutputPanel() {
 
   const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
 
-  const { socket, roomId } = useSocketStore();
   const [maxHeight] = useState(150);
-  const { output, error, isRunning, editor } = useCodeEditorStore();
+  const { output, error, isRunning } = useCodeEditorStore();
   const [isCopied, setIsCopied] = useState(false);
-  const [currentTab, setCurrentTab] = useState<"output" | "ai">("output");
+  const [currentTab, setCurrentTab] = useState<
+    "output" | "ai" | "question" | "live"
+  >("output");
 
   const [message, setMessage] = useState("");
   const [underlineStyle, setUnderlineStyle] = useState({ width: 0, left: 0 });
@@ -43,9 +47,13 @@ function OutputPanel() {
   const popupRef = useRef<HTMLDivElement | null>(null); // Popup reference
 
   const hasContent = error || output;
-  const tabRefs = {
+  const tabRefs: {
+    [key: string]: React.MutableRefObject<HTMLDivElement | null>;
+  } = {
     output: useRef<HTMLDivElement | null>(null),
     ai: useRef<HTMLDivElement | null>(null),
+    question: useRef<HTMLDivElement | null>(null),
+    live: useRef<HTMLDivElement | null>(null),
   };
 
   useEffect(() => {
@@ -62,54 +70,6 @@ function OutputPanel() {
       setUnderlineStyle({ width: offsetWidth, left: offsetLeft });
     }
   }, [currentTab]);
-
-  useEffect(() => {
-    if (editor) {
-      socket?.emit("responseChange", {
-        roomId,
-        response: {
-          output,
-          error,
-          isRunning,
-        },
-      });
-    }
-  }, [output, error, isRunning, editor, roomId, socket]);
-
-  useEffect(() => {
-    const updateResponse = ({
-      output,
-      error,
-      isRunning,
-      senderId,
-    }: {
-      output: string;
-      error: string;
-      isRunning: boolean;
-      senderId: string;
-    }) => {
-      if (!socket) return;
-      if (socket.id !== senderId) {
-        useCodeEditorStore.setState({
-          output,
-          error,
-          isRunning,
-          executionResult: {
-            error,
-            output,
-            code: useCodeEditorStore.getState().getCode(),
-          },
-        });
-      }
-    };
-
-    if (!socket) return;
-    socket.on("responseUpdate", updateResponse);
-
-    return () => {
-      socket.off("responseUpdate", updateResponse);
-    };
-  }, [socket]);
 
   const handleCopy = async () => {
     if (!hasContent) return;
@@ -197,22 +157,62 @@ function OutputPanel() {
           </span>
         </div>
 
-        <div
-          ref={tabRefs.ai}
-          onClick={() => setCurrentTab("ai")}
-          className={`group cursor-pointer relative flex items-center gap-2 px-2 py-1 bg-[#1e1e2e]/80 
+        {userData?.isPro && (
+          <div
+            ref={tabRefs.ai}
+            onClick={() => setCurrentTab("ai")}
+            className={`group cursor-pointer relative flex items-center gap-2 px-2 py-1 bg-[#1e1e2e]/80 
       rounded-lg transition-all
       hover:opacity-100
       ${currentTab === "ai" ? "opacity-100" : "opacity-50"}
        duration-200 border border-gray-800/50 hover:border-gray-700`}
-        >
-          <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ">
-            <Sparkles className="w-4 h-4 text-blue-400" />
+          >
+            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ">
+              <Sparkles className="w-4 h-4 text-blue-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-300 group-hover:text-gray-100 transition-colors duration-200">
+              AI Assistant
+            </span>
           </div>
-          <span className="text-sm font-medium text-gray-300 group-hover:text-gray-100 transition-colors duration-200">
-            AI Assistant
-          </span>
-        </div>
+        )}
+
+        {userData?.isPro && (
+          <div
+            ref={tabRefs.question}
+            onClick={() => setCurrentTab("question")}
+            className={`group cursor-pointer relative flex items-center gap-2 px-2 py-1 bg-[#1e1e2e]/80 
+      rounded-lg transition-all
+      hover:opacity-100
+      ${currentTab === "ai" ? "opacity-100" : "opacity-50"}
+       duration-200 border border-gray-800/50 hover:border-gray-700`}
+          >
+            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ">
+              <Book className="w-4 h-4 text-blue-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-300 group-hover:text-gray-100 transition-colors duration-200">
+              Question
+            </span>
+          </div>
+        )}
+
+        {userData?.isPro && (
+          <div
+            ref={tabRefs.live}
+            onClick={() => setCurrentTab("live")}
+            className={`group cursor-pointer relative flex items-center gap-2 px-2 py-1 bg-[#1e1e2e]/80 
+      rounded-lg transition-all
+      hover:opacity-100
+      ${currentTab === "ai" ? "opacity-100" : "opacity-50"}
+       duration-200 border border-gray-800/50 hover:border-gray-700`}
+          >
+            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ">
+              <Tv className="w-4 h-4 text-blue-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-300 group-hover:text-gray-100 transition-colors duration-200">
+              Live
+            </span>
+          </div>
+        )}
 
         {hasContent && currentTab === "output" && (
           <button
@@ -382,6 +382,10 @@ function OutputPanel() {
             </motion.div>
           </AnimatePresence>
         )}
+
+        {userData?.isPro && currentTab === "question" && <QuestionTab />}
+
+        {userData?.isPro && currentTab === "live" && <LiveTab />}
       </AnimatePresence>
     </div>
   );

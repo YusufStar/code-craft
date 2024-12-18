@@ -28,8 +28,6 @@ type Participant = {
 };
 
 function EditorPanel() {
-  const { socket, setRoomId } = useSocketStore();
-
   const clerk = useClerk();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isLiveShareDialogOpen, setIsLiveShareDialogOpen] = useState(false);
@@ -43,17 +41,8 @@ function EditorPanel() {
   const [loading, setLoading] = useState(false);
   const [loadedLanguage, setLoadedLanguage] = useState("");
 
-  const {
-    language,
-    theme,
-    fontSize,
-    editor,
-    setFontSize,
-    setEditor,
-    livePermission,
-    setLivePermission,
-    setCode,
-  } = useCodeEditorStore();
+  const { language, theme, fontSize, editor, setFontSize, setEditor, setCode } =
+    useCodeEditorStore();
 
   const mounted = useMounted();
 
@@ -72,58 +61,6 @@ function EditorPanel() {
   useEffect(() => {
     if (editor) loadCode();
   }, [language, editor]);
-
-  useEffect(() => {
-    const handleCodeUpdate = ({
-      code,
-      senderId,
-    }: {
-      code: string;
-      senderId: string;
-    }) => {
-      if (!socket) return;
-      if (socket.id !== senderId && editor) {
-        const currentValue = editor.getValue();
-        if (currentValue !== code) {
-          editor.setValue(code);
-        }
-      }
-    };
-
-    const updateParti = (
-      participants: Record<string, { canEdit: boolean; canRunCode: boolean }>
-    ) => {
-      const participantsArray = Object.entries(participants).map(
-        ([email, permissions]) => ({
-          email,
-          ...permissions,
-        })
-      );
-      setLiveShare((prev) =>
-        prev ? { ...prev, participants: participantsArray } : null
-      );
-    };
-
-    if (!socket) return;
-
-    socket.on("updateParticipants", updateParti);
-
-    socket.on("codeUpdate", handleCodeUpdate);
-
-    return () => {
-      socket.off("codeUpdate", handleCodeUpdate);
-      socket.off("updateParticipants", handleCodeUpdate);
-    };
-  }, [editor, socket]);
-
-  useEffect(() => {
-    setRoomId(liveShare?.liveShareCode as string);
-    setLivePermission(
-      liveShare?.participants.find(
-        (q) => q.email === clerk.user?.emailAddresses[0].emailAddress
-      )
-    );
-  }, [liveShare]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
@@ -146,17 +83,6 @@ function EditorPanel() {
   const handleEditorChange = async (value: string | undefined) => {
     if (typeof value === "string") {
       await saveCode(value);
-    }
-
-    if (livePermission !== null) {
-      if (!livePermission?.canEdit) return;
-
-      if (value && socket) {
-        socket.emit("codeChange", {
-          roomId: liveShare?.liveShareCode,
-          code: value,
-        });
-      }
     }
   };
 

@@ -67,7 +67,6 @@ export interface CodeEditorState {
   executionResult: ExecutionResult | null;
   runtimes: Runtime[];
   selectedVersion: string | null;
-  livePermission: any;
 
   setEditor: (editor: Monaco) => void;
   getCode: () => string;
@@ -76,7 +75,6 @@ export interface CodeEditorState {
   setFontSize: (fontSize: number) => void;
   runCode: () => Promise<void>;
   fetchRuntimes: () => Promise<void>;
-  setLivePermission: (dt: any) => void;
   setVersion: (version: string) => void;
   setCode: (code: string) => void;
 }
