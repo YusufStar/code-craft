@@ -116,7 +116,7 @@ function EditorPanel() {
   };
 
   const saveCode = async (value: string) => {
-    if (!editor || !user || !userData) return;
+    if (!userData) return;
     await saveOrUpdateCode({
       userId: userData?._id,
       language: language,
