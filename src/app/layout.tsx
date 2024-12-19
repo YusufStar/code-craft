@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import ConvexProvider from "@/components/providers/convex-provider";
 import Footer from "@/components/Footer";
-import { Toaster } from "react-hot-toast";
+import { Toaster} from 'sonner'
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

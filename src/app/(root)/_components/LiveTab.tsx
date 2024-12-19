@@ -4,9 +4,11 @@ import CreateSessionDialog from "./CreateSessionDialog";
 import JoinSessionDialog from "./JoinSessionDialog";
 import { useLiveStore } from "@/store/useLiveStore";
 import { Avatar } from "@mui/material";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
+import { leaveRoom } from "@/actions/room-actions";
+import useSocketStore from "@/store/useSocketStore";
 
 const LiveTab = () => {
   const { room, setRoom } = useLiveStore();
@@ -16,8 +18,8 @@ const LiveTab = () => {
   const { user } = useUser();
 
   const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
-
-  const leaveRoom = useMutation(api.room.leaveRoom);
+  const usersData = useQuery(api.users.getUsers);
+  const { updatePermissions } = useSocketStore();
 
   const handleCreateSession = () => {
     setCreateSession(true);
@@ -38,17 +40,34 @@ const LiveTab = () => {
   const handleLeaveSession = async () => {
     if (room && userData && user) {
       await leaveRoom({
-        roomId: room._id,
-        userId: userData?._id,
+        roomId: room.id,
+        userId: userData._id,
       });
       setRoom(null);
     }
   };
 
+  const handleChangePermissions = async (userId: string, permissions: any) => {
+    //@ts-expect-error: TODO: Fix this
+    if (room && room.permissions[userData?._id].lead) {
+      updatePermissions(room.id, userId, permissions);
+    } else {
+      console.error("You are not allowed to change permissions");
+    }
+  };
+
   return (
     <>
-      <CreateSessionDialog userData={userData} isOpen={createSession} onClose={handleCreateClose} />
-      <JoinSessionDialog userData={userData} isOpen={joinSession} onClose={handleJoinClose} />
+      <CreateSessionDialog
+        userData={userData}
+        isOpen={createSession}
+        onClose={handleCreateClose}
+      />
+      <JoinSessionDialog
+        userData={userData}
+        isOpen={joinSession}
+        onClose={handleJoinClose}
+      />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -63,7 +82,7 @@ const LiveTab = () => {
             className="relative bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] 
             rounded-xl p-4 h-[600px] overflow-auto font-mono text-sm"
           >
-            {!room?.roomCode ? (
+            {!room ? (
               <div className="flex flex-col items-center justify-center h-full space-y-4">
                 <button
                   onClick={handleCreateSession}
@@ -84,59 +103,101 @@ const LiveTab = () => {
                   <h2 className="text-lg font-bold text-white">
                     Session Users
                   </h2>
-                  
+
                   <h2 className="text-lg underline underline-offset-4 font-bold text-white/70">
-                    {room?.roomCode}
+                    {room?.id}
                   </h2>
 
-                  <button onClick={handleLeaveSession} className="px-3 py-1.5 bg-red-600 duration-200 ease-in-out text-white font-semibold rounded-lg shadow hover:bg-red-700 transition">
+                  <button
+                    onClick={handleLeaveSession}
+                    className="px-3 py-1.5 bg-red-600 duration-200 ease-in-out text-white font-semibold rounded-lg shadow hover:bg-red-700 transition"
+                  >
                     Leave Session
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {room?.participants.map((user) => (
-                    <div
-                      key={user._id}
-                      className="flex items-center justify-between bg-[#2a2a40] p-3 rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Avatar src={user.name} alt={user.name} />
-                        <div>
-                          <p className="text-white font-medium">{user.name}</p>
-                        </div>
-                      </div>
+                  {room?.permissions &&
+                    Object.entries(room?.permissions).map(
+                      ([userId, userPermissions]) => {
+                        const userRespone = usersData?.find(
+                          (u: any) => u._id === userId
+                        );
 
-                      <div className="flex space-x-3">
-                        <button
-                          className={`px-2 py-1 rounded-lg ${
-                            true
-                              ? "bg-green-600 text-white"
-                              : "bg-gray-600 text-gray-300"
-                          }`}
-                        >
-                          Can Edit
-                        </button>
-                        <button
-                          className={`px-2 py-1 rounded-lg ${
-                            true
-                              ? "bg-yellow-600 text-white"
-                              : "bg-gray-600 text-gray-300"
-                          }`}
-                        >
-                          Can Play
-                        </button>
-                        <button
-                          className={`px-2 py-1 rounded-lg ${
-                            true
-                              ? "bg-purple-600 text-white"
-                              : "bg-gray-600 text-gray-300"
-                          }`}
-                        >
-                          Lead
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                        if (!userRespone) return null;
+
+                        return (
+                          <div
+                            key={userRespone._id}
+                            className="flex items-center justify-between bg-[#2a2a40] p-3 rounded-lg"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <Avatar
+                                src={userRespone.name}
+                                alt={userRespone.name}
+                              />
+                              <div>
+                                <div className="flex flex-col gap-1">
+                                  <p className="text-white font-medium">
+                                    {userRespone.name}
+                                  </p>
+                                  <p className="text-gray-400 text-xs">
+                                    {userRespone.email}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex space-x-3">
+                              <button
+                                onClick={() =>
+                                  handleChangePermissions(userId, {
+                                    ...userPermissions,
+                                    canEdit: !userPermissions.canEdit,
+                                  })
+                                }
+                                className={`px-2 py-1 rounded-lg ${
+                                  userPermissions.canEdit
+                                    ? "bg-green-600 text-white"
+                                    : "bg-gray-600 text-gray-300"
+                                }`}
+                              >
+                                Can Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleChangePermissions(userId, {
+                                    ...userPermissions,
+                                    canPlay: !userPermissions.canPlay,
+                                  })
+                                }
+                                className={`px-2 py-1 rounded-lg ${
+                                  userPermissions.canPlay
+                                    ? "bg-yellow-600 text-white"
+                                    : "bg-gray-600 text-gray-300"
+                                }`}
+                              >
+                                Can Play
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleChangePermissions(userId, {
+                                    ...userPermissions,
+                                    lead: !userPermissions.lead,
+                                  })
+                                }
+                                className={`px-2 py-1 rounded-lg ${
+                                  userPermissions.lead
+                                    ? "bg-purple-600 text-white"
+                                    : "bg-gray-600 text-gray-300"
+                                }`}
+                              >
+                                Lead
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+                    )}
                 </div>
               </div>
             )}

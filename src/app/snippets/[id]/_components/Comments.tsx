@@ -3,7 +3,7 @@ import { Id } from "../../../../../convex/_generated/dataModel";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { MessageSquare } from "lucide-react";
 import Comment from "./Comment";
 import CommentForm from "./CommentForm";

@@ -21,7 +21,7 @@ import { LANGUAGE_CONFIG } from "../_constants";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import QuestionTab from "./question-tab";
 import LiveTab from "./LiveTab";

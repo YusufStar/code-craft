@@ -151,18 +151,17 @@ export type CreatedUser = {
   userId: string;
 };
 
-export type RoomData = {
-  _id: Id<"rooms">;
-  createdUserId: CreatedUser;
-  isPrivate: boolean;
+export interface Room {
+  id: string;
   name: string;
-  participants: CreatedUser[];
-  password: string;
-  roomCode: string;
-};
+  permissions: { [key: string]: any };
+  code: string;
+  language: string;
+  output: string;
+}
 
 export interface LiveStore {
-  room: RoomData | null;
+  room: Room | null;
 
-  setRoom: (room: RoomData | null) => void;
+  setRoom: (room: Room | null) => void;
 }

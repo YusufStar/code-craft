@@ -1,11 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
-import { Id } from "../../../../convex/_generated/dataModel";
 import { useLiveStore } from "@/store/useLiveStore";
+import useSocketStore from "@/store/useSocketStore";
 
 type Props = {
   isOpen: boolean;
@@ -14,7 +12,6 @@ type Props = {
 };
 
 const CreateSessionDialog = ({ isOpen, onClose, userData }: Props) => {
-  const { setRoom } = useLiveStore();
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const { user } = useUser();
@@ -29,7 +26,8 @@ const CreateSessionDialog = ({ isOpen, onClose, userData }: Props) => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const createRoom = useMutation(api.room.createRoom);
+
+  const { createRoom } = useSocketStore();
 
   // Click outside to close
   useEffect(() => {
@@ -53,7 +51,6 @@ const CreateSessionDialog = ({ isOpen, onClose, userData }: Props) => {
     e.preventDefault();
 
     if (!userData || !user) return;
-
     if (formState.isPrivate && !formState.password) {
       alert("Please enter a password.");
       return;
@@ -70,25 +67,14 @@ const CreateSessionDialog = ({ isOpen, onClose, userData }: Props) => {
     }
 
     try {
+      if (!userData) return;
       setLoading(true);
-      const roomData = await createRoom({
-        ...state,
-        createdUserId: userData?._id as Id<"users">,
-        participants: [userData?._id as Id<"users">],
+
+      createRoom({
+        creatorId: userData?._id,
+        name: formState.name,
+        password: formState.isPrivate ? formState.password : undefined,
       });
-
-      if (!roomData) {
-        alert("Invalid room code or password.");
-        return;
-      }
-
-      if (!roomData) {
-        alert("Invalid room code or password.");
-        return;
-      }
-
-      //@ts-expect-error: TODO: Fix this
-      setRoom(roomData);
     } catch (error) {
       console.log("session create error: ", error);
     } finally {

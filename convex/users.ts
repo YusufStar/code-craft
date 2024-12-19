@@ -42,6 +42,14 @@ export const getUser = query({
   },
 });
 
+export const getUsers = query({
+  handler: async (ctx) => {
+    const users = await ctx.db.query("users").collect();
+
+    return users;
+  },
+});
+
 export const upgradeToPro = mutation({
   args: {
     email: v.string(),

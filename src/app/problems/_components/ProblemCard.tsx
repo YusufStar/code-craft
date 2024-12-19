@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import Image from "next/image";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 function ProblemCard({ problem }: { problem: Problem }) {
   const { user } = useUser();

@@ -13,11 +13,16 @@ import ShareSnippetDialog from "./share-snippet-dialog";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useLiveStore } from "@/store/useLiveStore";
+import useSocketStore from "@/store/useSocketStore";
+import { io } from "socket.io-client";
+import { Room } from "@/types";
 
 function EditorPanel() {
   const clerk = useClerk();
   const { user } = useUser();
   const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
+
+  const { setConnectionStatus, setSocket, socket } = useSocketStore();
 
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const getCode = useMutation(api.codes.getCode);
@@ -25,41 +30,19 @@ function EditorPanel() {
   const [loading, setLoading] = useState(false);
   const [loadedLanguage, setLoadedLanguage] = useState("");
 
-  const { room } = useLiveStore();
-
-  const roomEditor = useQuery(api.room.getRoomEditor, {
-    roomId: room?._id ?? "",
-  });
-  const updateEditor = useMutation(api.room.updateEditor);
+  const { room, setRoom } = useLiveStore();
 
   const { language, theme, fontSize, editor, setFontSize, setEditor, setCode } =
     useCodeEditorStore();
 
   const mounted = useMounted();
 
-  useEffect(() => {
-    if (room?.createdUserId === userData?._id && room && userData && editor) {
-      updateEditor({
-        roomId: room._id,
-        userId: userData?._id,
-        language,
-        code: editor?.getValue() ?? "",
-      });
-    }
-  }, [room, language, editor, userData]);
-
-  useEffect(() => {
-    if (roomEditor && editor && roomEditor.code !== editor.getValue()) {
-      editor.setValue(roomEditor.code);
-    }
-  }, [roomEditor, room]);
-
   const loadCode = async () => {
+    if (!user || !userData) return;
     setLoading(true);
-    if (!user) return;
     if (loadedLanguage !== language) {
       setLoadedLanguage(language);
-      const res = await getCode({ userId: user?.id, language: language });
+      const res = await getCode({ userId: userData?._id, language: language });
       if (!res) return;
       setCode(res.code ?? "");
     }
@@ -67,8 +50,61 @@ function EditorPanel() {
   };
 
   useEffect(() => {
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_IP); // Connect to the server (defaults to localhost)
+    setSocket(socket);
+
+    socket.on("connect", () => {
+      setConnectionStatus(true);
+      console.log("Connected to socket server");
+    });
+
+    socket.on("disconnect", () => {
+      setConnectionStatus(false);
+      console.log("Disconnected from socket server");
+    });
+
+    socket.on(
+      "room-update",
+      ({
+        language,
+        code,
+        type,
+        roomData,
+      }: {
+        language: string;
+        code: string;
+        roomData: Room;
+        type: "language" | "code" | "permissions" | "new-user";
+      }) => {
+        if (type === "language") {
+          if (!room) return;
+          setRoom({
+            ...room,
+            language: language,
+          });
+        } else if (type === "code") {
+          if (!room) return;
+          setRoom({
+            ...room,
+            code: code,
+          });
+        } else if (type === "permissions") {
+          setRoom(roomData);
+        } else if (type === "new-user") {
+          setRoom(roomData);
+        }
+      }
+    );
+
+    return () => {
+      socket.disconnect();
+      socket.off("room-update");
+    };
+  }, [setSocket, setConnectionStatus]);
+
+  useEffect(() => {
     if (editor && !room) loadCode();
-  }, [language, editor, room]);
+  }, [language, editor, room, userData, user]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
@@ -80,9 +116,9 @@ function EditorPanel() {
   };
 
   const saveCode = async (value: string) => {
-    if (!editor || !user) return;
+    if (!editor || !user || !userData) return;
     await saveOrUpdateCode({
-      userId: user.id,
+      userId: userData?._id,
       language: language,
       code: value,
     });
@@ -91,8 +127,28 @@ function EditorPanel() {
   const handleEditorChange = async (value: string | undefined) => {
     if (typeof value === "string" && !room) {
       await saveCode(value);
+    } else if (typeof value === "string" && room) {
+      setRoom({
+        ...room,
+        code: value,
+      });
+
+      if (!socket) return;
+
+      socket.emit("update-code", {
+        roomId: room.id,
+        code: value,
+        userId: userData?._id,
+      });
     }
   };
+
+  useEffect(() => {
+    if (!room) return;
+    if (room?.code && editor && room?.code !== editor.getValue()) {
+      editor.setValue(room.code);
+    }
+  }, [room?.code, editor]);
 
   const handleFontSizeChange = (newSize: number) => {
     const size = Math.min(Math.max(newSize, 12), 24);
@@ -215,4 +271,5 @@ function EditorPanel() {
     </div>
   );
 }
+
 export default EditorPanel;

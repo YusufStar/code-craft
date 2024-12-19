@@ -1,11 +1,8 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
-import { Id } from "../../../../convex/_generated/dataModel";
-import { useLiveStore } from "@/store/useLiveStore";
+import useSocketStore from "@/store/useSocketStore";
 
 type Props = {
   isOpen: boolean;
@@ -14,7 +11,7 @@ type Props = {
 };
 
 const JoinSessionDialog = ({ isOpen, onClose, userData }: Props) => {
-  const { setRoom } = useLiveStore();
+  const { socket } = useSocketStore();
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const { user } = useUser();
@@ -27,7 +24,6 @@ const JoinSessionDialog = ({ isOpen, onClose, userData }: Props) => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const joinRoom = useMutation(api.room.joinRoom);
 
   // Click outside to close
   useEffect(() => {
@@ -62,19 +58,14 @@ const JoinSessionDialog = ({ isOpen, onClose, userData }: Props) => {
 
     try {
       setLoading(true);
-      const roomData = await joinRoom({
-        roomCode: formState.roomCode,
-        password: formState.password,
-        userId: userData?._id as Id<"users">,
-      });
 
-      if (!roomData) {
-        alert("Invalid room code or password.");
-        return;
+      if (socket) {
+        socket.emit("new-user", {
+          roomId: formState.roomCode,
+          userId: userData?._id,
+          password: formState.password,
+        });
       }
-
-      //@ts-expect-error: TODO: Fix this
-      setRoom(roomData);
     } catch (error) {
       console.log("session create error: ", error);
     } finally {
