@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
-import { useLiveStore } from "@/store/useLiveStore";
 import useSocketStore from "@/store/useSocketStore";
 
 type Props = {
