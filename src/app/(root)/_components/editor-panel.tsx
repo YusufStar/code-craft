@@ -94,7 +94,7 @@ function EditorPanel() {
             language: language,
           });
         } else if (type === "code") {
-          if (!room) {
+          if (room?.id === undefined) {
             return;
           }
           if (userData && userId === userData?._id) {
@@ -117,7 +117,7 @@ function EditorPanel() {
         }
       }
     );
-  }, [room, userData, socket]);
+  }, [room, userData, socket, editor]);
 
   useEffect(() => {
     if (editor && !room) loadCode();
@@ -146,21 +146,15 @@ function EditorPanel() {
       await saveCode(value);
     } else if (typeof value === "string" && room) {
       if (!socket) return;
+      console.log("Emitting update-code");
       socket.emit("update-code", {
         roomId: room.id,
         code: value,
         userId: userData?._id,
-        version: room.version
+        version: room.version,
       });
     }
   };
-
-  useEffect(() => {
-    if (!room) return;
-    if (room?.code && editor && room?.code !== editor.getValue()) {
-      editor.setValue(room.code);
-    }
-  }, [room?.code, editor]);
 
   const handleFontSizeChange = (newSize: number) => {
     const size = Math.min(Math.max(newSize, 12), 24);
