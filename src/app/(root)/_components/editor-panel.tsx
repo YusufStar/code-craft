@@ -70,6 +70,7 @@ function EditorPanel() {
 
   useEffect(() => {
     if (!socket) return;
+    console.log(room);
     socket.on(
       "room-update",
       ({
@@ -78,7 +79,6 @@ function EditorPanel() {
         type,
         roomData,
         version,
-        userId,
       }: {
         language: string;
         code: string;
@@ -97,14 +97,10 @@ function EditorPanel() {
           if (room?.id === undefined) {
             return;
           }
-          if (userData && userId === userData?._id) {
-            console.log("Code updated by self");
-            return;
-          }
           setRoom({
             ...room,
             code: code,
-            version,
+            version
           });
 
           if (editor && code !== editor.getValue()) {
