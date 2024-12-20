@@ -85,7 +85,7 @@ function EditorPanel() {
         roomData: Room;
         userId: string;
         version: number;
-        type: "language" | "code" | "permissions" | "new-user";
+        type: "language" | "code" | "permissions" | "new-user" | "version";
       }) => {
         if (type === "language") {
           if (!room) return;
@@ -100,7 +100,7 @@ function EditorPanel() {
           setRoom({
             ...room,
             code: code,
-            version
+            version,
           });
 
           if (editor && code !== editor.getValue()) {
@@ -110,6 +110,16 @@ function EditorPanel() {
           setRoom(roomData);
         } else if (type === "new-user") {
           setRoom(roomData);
+          if (editor) {
+            editor.setValue(roomData.code);
+          }
+        } else if (type === "version") {
+          if (!room) return;
+          if (room.version === version) return;
+          setRoom({
+            ...room,
+            version,
+          });
         }
       }
     );

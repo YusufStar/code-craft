@@ -20,8 +20,8 @@ export const createOrUpdateCode = mutation({
     // check pro status
     const user = await ctx.db
       .query("users")
-      .withIndex("by_user_id")
-      .filter((q) => q.eq(q.field("userId"), identity.subject))
+      .withIndex("by_id")
+      .filter((q) => q.eq(q.field("_id"), args.userId))
       .first();
 
     if (!user?.isPro && args.language !== "javascript") {
@@ -50,9 +50,9 @@ export const createOrUpdateCode = mutation({
         .withIndex("by_problem_id_and_language_id_and_user_id")
         .filter(
           (q) =>
-            q.eq(q.field("userId"), args.userId) &&
+            q.eq(q.field("problemId"), args.problemId) &&
             q.eq(q.field("language"), args.language) &&
-            q.eq(q.field("problemId"), args.problemId)
+            q.eq(q.field("userId"), args.userId)
         )
         .first();
 
@@ -74,9 +74,9 @@ export const createOrUpdateCode = mutation({
         .withIndex("by_problem_id_and_language_id_and_user_id")
         .filter(
           (q) =>
-            q.eq(q.field("userId"), args.userId) &&
+            q.eq(q.field("problemId"), undefined) &&
             q.eq(q.field("language"), args.language) &&
-            q.eq(q.field("problemId"), undefined)
+            q.eq(q.field("userId"), args.userId)
         )
         .first();
 
@@ -103,19 +103,27 @@ export const getCode = mutation({
   },
 
   handler: async (ctx, args) => {
-    const code = await ctx.db
+    console.log(args);
+    const codes = await ctx.db
       .query("codes")
       .withIndex("by_language_and_user_id")
       .filter(
         (q) =>
-          q.eq(q.field("userId"), args.userId) &&
           q.eq(q.field("language"), args.language) &&
-          q.eq(q.field("problemId"), undefined)
+          q.eq(q.field("userId"), args.userId)
       )
-      .first();
+      .collect();
+
+    const filtered = codes.filter((c) => c.problemId === undefined);
+
+    if (filtered.length === 0) {
+      return {
+        code: "",
+      };
+    }
 
     return {
-      code: code?.code,
+      code: filtered[0].code,
     };
   },
 });
