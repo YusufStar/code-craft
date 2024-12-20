@@ -77,12 +77,14 @@ function EditorPanel() {
         code,
         type,
         roomData,
+        version,
         userId,
       }: {
         language: string;
         code: string;
         roomData: Room;
         userId: string;
+        version: number;
         type: "language" | "code" | "permissions" | "new-user";
       }) => {
         if (type === "language") {
@@ -95,14 +97,19 @@ function EditorPanel() {
           if (!room) {
             return;
           }
-          if (userId === userData?._id) {
+          if (userData && userId === userData?._id) {
             console.log("Code updated by self");
             return;
           }
           setRoom({
             ...room,
             code: code,
+            version,
           });
+
+          if (editor && code !== editor.getValue()) {
+            editor.setValue(code);
+          }
         } else if (type === "permissions") {
           setRoom(roomData);
         } else if (type === "new-user") {
@@ -143,6 +150,7 @@ function EditorPanel() {
         roomId: room.id,
         code: value,
         userId: userData?._id,
+        version: room.version
       });
     }
   };

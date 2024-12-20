@@ -157,6 +157,7 @@ export interface Room {
   permissions: { [key: string]: any };
   code: string;
   language: string;
+  version: number;
   output: string;
 }
 
