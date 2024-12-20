@@ -17,6 +17,16 @@ import useSocketStore from "@/store/useSocketStore";
 import { io } from "socket.io-client";
 import { Room } from "@/types";
 
+function debounce(func: any, delay: number) {
+  let timer: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+}
+
 function EditorPanel() {
   const clerk = useClerk();
   const { user } = useUser();
@@ -29,6 +39,7 @@ function EditorPanel() {
   const saveOrUpdateCode = useMutation(api.codes.createOrUpdateCode);
   const [loading, setLoading] = useState(false);
   const [loadedLanguage, setLoadedLanguage] = useState("");
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const { room, setRoom } = useLiveStore();
 
@@ -70,7 +81,6 @@ function EditorPanel() {
 
   useEffect(() => {
     if (!socket) return;
-    console.log(room);
     socket.on(
       "room-update",
       ({
@@ -78,14 +88,13 @@ function EditorPanel() {
         code,
         type,
         roomData,
-        version,
+        userId,
       }: {
         language: string;
         code: string;
         roomData: Room;
         userId: string;
-        version: number;
-        type: "language" | "code" | "permissions" | "new-user" | "version";
+        type: "language" | "code" | "permissions" | "new-user";
       }) => {
         if (type === "language") {
           if (!room) return;
@@ -94,13 +103,21 @@ function EditorPanel() {
             language: language,
           });
         } else if (type === "code") {
+          console.log({
+            language,
+            code,
+            roomData,
+            userId,
+            type,
+          });
           if (room?.id === undefined) {
             return;
           }
+          if (userId === userData?._id) return;
+          if (code === editor?.getValue()) return;
           setRoom({
             ...room,
             code: code,
-            version,
           });
 
           if (editor && code !== editor.getValue()) {
@@ -113,13 +130,6 @@ function EditorPanel() {
           if (editor) {
             editor.setValue(roomData.code);
           }
-        } else if (type === "version") {
-          if (!room) return;
-          if (room.version === version) return;
-          setRoom({
-            ...room,
-            version,
-          });
         }
       }
     );
@@ -138,28 +148,38 @@ function EditorPanel() {
     console.log("refresh");
   };
 
-  const saveCode = async (value: string) => {
+  const debouncedSaveCode = debounce(async (value: string) => {
     if (!userData) return;
     await saveOrUpdateCode({
       userId: userData?._id,
       language: language,
       code: value,
     });
-  };
+  }, 300);
+
+  const debouncedEmitUpdate = debounce((value: string) => {
+    if (!socket || !room) return;
+    socket.emit("update-code", {
+      roomId: room.id,
+      code: value,
+      userId: userData?._id,
+    });
+  }, 300);
 
   const handleEditorChange = async (value: string | undefined) => {
-    if (typeof value === "string" && !room) {
-      await saveCode(value);
-    } else if (typeof value === "string" && room) {
-      if (!socket) return;
-      console.log("Emitting update-code");
-      socket.emit("update-code", {
-        roomId: room.id,
-        code: value,
-        userId: userData?._id,
-        version: room.version,
-      });
+    if (isRateLimited && !room) {
+      console.log("Rate limit aşıldı, bekleniyor.");
+      return;
     }
+
+    if (typeof value === "string" && !room) {
+      debouncedSaveCode(value);
+    } else if (typeof value === "string" && room && room.code !== value) {
+      debouncedEmitUpdate(value);
+    }
+
+    setIsRateLimited(true);
+    setTimeout(() => setIsRateLimited(false), 500); // 1 saniye limit
   };
 
   const handleFontSizeChange = (newSize: number) => {

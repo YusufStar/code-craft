@@ -59,20 +59,16 @@ const CreateSessionDialog = ({ isOpen, onClose, userData }: Props) => {
       alert("Please enter a name.");
     }
 
-    const state = formState;
-
-    if (state.isPrivate) {
-      delete state.password;
-    }
-
     try {
       if (!userData) return;
       setLoading(true);
 
+      console.log("userData: ", formState.password);
+
       createRoom({
         creatorId: userData?._id,
         name: formState.name,
-        password: formState.isPrivate ? formState.password : undefined,
+        password: formState.password,
       });
     } catch (error) {
       console.log("session create error: ", error);
@@ -193,9 +189,9 @@ const CreateSessionDialog = ({ isOpen, onClose, userData }: Props) => {
                           Password
                         </label>
                         <input
-                          onChange={(e) =>
-                            handleChange(e.target.value, "password")
-                          }
+                          onChange={(e) => {
+                            handleChange(e.target.value, "password");
+                          }}
                           value={formState.password}
                           type="password"
                           id="password"
