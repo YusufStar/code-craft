@@ -63,6 +63,13 @@ function EditorPanel() {
       console.log("Disconnected from socket server");
     });
 
+    return () => {
+      socket.disconnect();
+    };
+  }, [setSocket, setConnectionStatus]);
+
+  useEffect(() => {
+    if (!socket) return;
     socket.on(
       "room-update",
       ({
@@ -70,10 +77,12 @@ function EditorPanel() {
         code,
         type,
         roomData,
+        userId,
       }: {
         language: string;
         code: string;
         roomData: Room;
+        userId: string;
         type: "language" | "code" | "permissions" | "new-user";
       }) => {
         if (type === "language") {
@@ -83,7 +92,13 @@ function EditorPanel() {
             language: language,
           });
         } else if (type === "code") {
-          if (!room) return;
+          if (!room) {
+            return;
+          }
+          if (userId === userData?._id) {
+            console.log("Code updated by self");
+            return;
+          }
           setRoom({
             ...room,
             code: code,
@@ -95,12 +110,7 @@ function EditorPanel() {
         }
       }
     );
-
-    return () => {
-      socket.disconnect();
-      socket.off("room-update");
-    };
-  }, [setSocket, setConnectionStatus]);
+  }, [room, userData, socket]);
 
   useEffect(() => {
     if (editor && !room) loadCode();
@@ -128,13 +138,7 @@ function EditorPanel() {
     if (typeof value === "string" && !room) {
       await saveCode(value);
     } else if (typeof value === "string" && room) {
-      setRoom({
-        ...room,
-        code: value,
-      });
-
       if (!socket) return;
-
       socket.emit("update-code", {
         roomId: room.id,
         code: value,
