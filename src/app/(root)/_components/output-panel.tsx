@@ -62,7 +62,7 @@ function OutputPanel() {
       const { offsetWidth, offsetLeft } = tabRefs[currentTab].current;
       setUnderlineStyle({ width: offsetWidth, left: offsetLeft });
     }
-  }, [currentTab]);
+  }, [currentTab, room]);
 
   const handleCopy = async () => {
     if (!hasContent) return;
@@ -171,7 +171,6 @@ function OutputPanel() {
 
         {userData?.isPro && room && (
           <div
-            key={room.id} 
             ref={tabRefs.question}
             onClick={() => setCurrentTab("question")}
             className={`group cursor-pointer relative flex items-center gap-2 px-2 py-1 bg-[#1e1e2e]/80 
@@ -380,7 +379,7 @@ function OutputPanel() {
 
         {userData?.isPro && currentTab === "question" && <QuestionTab />}
 
-        <LiveTab canRender={!!userData?.isPro && currentTab === "live"} />
+        {userData?.isPro && currentTab === "live" && <LiveTab />}
       </AnimatePresence>
     </div>
   );

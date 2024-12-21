@@ -9,7 +9,7 @@ import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import useSocketStore from "@/store/useSocketStore";
 
-const LiveTab = ({ canRender }: { canRender: boolean }) => {
+const LiveTab = () => {
   const { room, setRoom } = useLiveStore();
   const { socket } = useSocketStore();
   const [createSession, setCreateSession] = useState(false);
@@ -55,8 +55,6 @@ const LiveTab = ({ canRender }: { canRender: boolean }) => {
       console.error("You are not allowed to change permissions");
     }
   };
-
-  if (!canRender) return null;
 
   return (
     <>
