@@ -6,14 +6,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ChevronDownIcon, Lock, Sparkles } from "lucide-react";
 import useMounted from "@/hooks/useMounted";
+import { useLiveStore } from "@/store/useLiveStore";
+import useSocketStore from "@/store/useSocketStore";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 
 function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const mounted = useMounted();
 
   const { language, setLanguage } = useCodeEditorStore();
+  const { room } = useLiveStore();
+  const { socket } = useSocketStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const currentLanguageObj = LANGUAGE_CONFIG[language];
+  const { user } = useUser();
+  const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -30,13 +39,21 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
   }, []);
 
   useEffect(() => {
-    setLanguage("javascript")
-  }, [])
+    setLanguage("javascript");
+  }, []);
 
   const handleLanguageSelect = (langId: string) => {
     if (!hasAccess && langId !== "javascript") return;
 
-    setLanguage(langId);
+    if (room?.id && socket && userData) {
+      socket.emit("update-language", {
+        roomId: room?.id,
+        language: langId,
+        userId: userData?._id,
+      });
+    } else {
+      setLanguage(langId);
+    }
     setIsOpen(false);
   };
 

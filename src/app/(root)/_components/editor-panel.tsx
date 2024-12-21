@@ -17,16 +17,6 @@ import useSocketStore from "@/store/useSocketStore";
 import { io } from "socket.io-client";
 import { Room } from "@/types";
 
-function debounce(func: any, delay: number) {
-  let timer: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      func(...args);
-    }, delay);
-  };
-}
-
 function EditorPanel() {
   const clerk = useClerk();
   const { user } = useUser();
@@ -39,12 +29,19 @@ function EditorPanel() {
   const saveOrUpdateCode = useMutation(api.codes.createOrUpdateCode);
   const [loading, setLoading] = useState(false);
   const [loadedLanguage, setLoadedLanguage] = useState("");
-  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const { room, setRoom } = useLiveStore();
 
-  const { language, theme, fontSize, editor, setFontSize, setEditor, setCode } =
-    useCodeEditorStore();
+  const {
+    language,
+    theme,
+    fontSize,
+    editor,
+    setFontSize,
+    setEditor,
+    setCode,
+    setLanguage,
+  } = useCodeEditorStore();
 
   const mounted = useMounted();
 
@@ -100,10 +97,12 @@ function EditorPanel() {
       }) => {
         if (type === "language") {
           if (!room) return;
+          console.log("updated client language", language);
           setRoom({
             ...room,
             language: language,
           });
+          setLanguage(language);
         } else if (type === "code") {
           console.log({
             language,
@@ -131,6 +130,7 @@ function EditorPanel() {
           setRoom(roomData);
           if (editor) {
             editor.setValue(roomData.code);
+            setLanguage(roomData.language);
           }
         } else if (type === "leave-room") {
           setRoom(roomData);
@@ -152,38 +152,35 @@ function EditorPanel() {
     console.log("refresh");
   };
 
-  const debouncedSaveCode = debounce(async (value: string) => {
+  const debouncedSaveCode = async (value: string) => {
     if (!userData) return;
     await saveOrUpdateCode({
       userId: userData?._id,
       language: language,
       code: value,
     });
-  }, 300);
+  };
 
-  const debouncedEmitUpdate = debounce((value: string) => {
+  const debouncedEmitUpdate = (value: string) => {
     if (!socket || !room) return;
     socket.emit("update-code", {
       roomId: room.id,
       code: value,
       userId: userData?._id,
     });
-  }, 300);
+  };
 
   const handleEditorChange = async (value: string | undefined) => {
-    if (isRateLimited && !room) {
-      console.log("Rate limit aşıldı, bekleniyor.");
-      return;
-    }
-
     if (typeof value === "string" && !room) {
       debouncedSaveCode(value);
-    } else if (typeof value === "string" && room && room.code !== value) {
+    } else if (
+      typeof value === "string" &&
+      room &&
+      room.code !== value &&
+      userData
+    ) {
       debouncedEmitUpdate(value);
     }
-
-    setIsRateLimited(true);
-    setTimeout(() => setIsRateLimited(false), 500); // 1 saniye limit
   };
 
   const handleFontSizeChange = (newSize: number) => {
