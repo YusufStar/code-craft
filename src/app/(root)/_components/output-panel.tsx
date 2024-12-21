@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import QuestionTab from "./question-tab";
 import LiveTab from "./LiveTab";
 import { useTabsStore } from "@/store/useTabsStore";
+import { useLiveStore } from "@/store/useLiveStore";
 
 function OutputPanel() {
   const router = useRouter();
@@ -41,6 +42,7 @@ function OutputPanel() {
   const [message, setMessage] = useState("");
   const [underlineStyle, setUnderlineStyle] = useState({ width: 0, left: 0 });
   const { messages, setMessages } = useAi();
+  const { room } = useLiveStore();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup state
   const popupRef = useRef<HTMLDivElement | null>(null); // Popup reference
@@ -167,8 +169,9 @@ function OutputPanel() {
           </div>
         )}
 
-        {userData?.isPro && (
+        {userData?.isPro && room && (
           <div
+            key={room.id}
             ref={tabRefs.question}
             onClick={() => setCurrentTab("question")}
             className={`group cursor-pointer relative flex items-center gap-2 px-2 py-1 bg-[#1e1e2e]/80 
@@ -377,7 +380,7 @@ function OutputPanel() {
 
         {userData?.isPro && currentTab === "question" && <QuestionTab />}
 
-        <LiveTab canRender={!!userData?.isPro && currentTab === "live"}/>
+        <LiveTab canRender={!!userData?.isPro && currentTab === "live"} />
       </AnimatePresence>
     </div>
   );
