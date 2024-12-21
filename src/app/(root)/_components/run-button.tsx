@@ -11,6 +11,7 @@ import { Loader2, Play } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
 import { myPermissions, useLiveStore } from "@/store/useLiveStore";
 import { toast } from "sonner";
+import { useTabsStore } from "@/store/useTabsStore";
 
 function RunButton() {
   const { user } = useUser();
@@ -20,9 +21,11 @@ function RunButton() {
   const saveExecution = useMutation(api.codeExecutions.saveExecution);
   const controlExecution = useMutation(api.codeExecutions.controlExecution);
   const { room } = useLiveStore();
+  const { setCurrentTab } = useTabsStore();
 
   const handleRun = async () => {
     if (!userData) return;
+    setCurrentTab("output");
     if (room?.id && !myPermissions(userData?._id).canPlay) {
       toast.error("You don't have permission to run code in this room");
       return;
