@@ -41,6 +41,10 @@ function EditorPanel() {
     setEditor,
     setCode,
     setLanguage,
+    output,
+    isRunning,
+    executionResult,
+    error,
   } = useCodeEditorStore();
 
   const mounted = useMounted();
@@ -56,6 +60,20 @@ function EditorPanel() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!socket || !userData) return;
+    socket.emit("update-output", {
+      roomId: room?.id,
+      userId: userData?._id,
+      output: {
+        output,
+        isRunning,
+        error,
+        executionResult,
+      },
+    });
+  }, [socket, output, isRunning, error, executionResult]);
 
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_IP, {
@@ -86,6 +104,7 @@ function EditorPanel() {
         language,
         code,
         type,
+        output,
         roomData,
         userId,
       }: {
@@ -93,11 +112,11 @@ function EditorPanel() {
         code: string;
         roomData: Room;
         userId: string;
+        output: any;
         type: "language" | "code" | "permissions" | "new-user" | "leave-room";
       }) => {
         if (type === "language") {
           if (!room) return;
-          console.log("updated client language", language);
           setRoom({
             ...room,
             language: language,
@@ -134,6 +153,27 @@ function EditorPanel() {
           }
         } else if (type === "leave-room") {
           setRoom(roomData);
+        } else if (type === "output") {
+          if (!room) return;
+          if (userId === userData?._id) return;
+          const {
+            output: newOutput,
+            isRunning,
+            error,
+            executionResult,
+          } = output;
+          setRoom({
+            ...room,
+            output: output,
+          });
+          if (editor) {
+            useCodeEditorStore.setState({
+              output: newOutput,
+              isRunning: isRunning,
+              error: error,
+              executionResult: executionResult,
+            });
+          }
         }
       }
     );
