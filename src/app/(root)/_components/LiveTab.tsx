@@ -50,7 +50,7 @@ const LiveTab = ({ canRender }: { canRender: boolean }) => {
   const handleChangePermissions = async (userId: string, permissions: any) => {
     //@ts-expect-error: TODO: Fix this
     if (room && room.permissions[userData?._id].lead) {
-      updatePermissions(room.id, userId, permissions);
+      updatePermissions(room.id, userData?._id as string, userId, permissions);
     } else {
       console.error("You are not allowed to change permissions");
     }

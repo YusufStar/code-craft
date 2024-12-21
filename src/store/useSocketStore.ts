@@ -27,7 +27,8 @@ interface SocketStore {
   updateCode: (roomId: string, code: string, userId: string) => void; // Update code
   updatePermissions: (
     roomId: string,
-    userId: string,
+    editorUserId: string,
+    editedUserId: string,
     permissions: any[]
   ) => void; // Update permissions
   setConnectionStatus: (status: boolean) => void; // Set connection status
@@ -78,12 +79,18 @@ const useSocketStore = create<SocketStore>((set, get) => ({
   // Update permissions for a user in the room
   updatePermissions: (
     roomId: string,
-    userId: string,
+    editorUserId: string,
+    editedUserId: string,
     permissions: any[]
   ) => {
     const socket = get().socket;
     if (socket) {
-      socket.emit("update-permissions", { roomId, userId, permissions });
+      socket.emit("update-permissions", {
+        roomId,
+        editorUserId,
+        editedUserId,
+        permissions,
+      });
     }
   },
 
