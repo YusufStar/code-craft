@@ -1,5 +1,6 @@
 import EditorPanel from "./_components/editor-panel";
 import Header from "./_components/header";
+import MiniRoomBlock from "./_components/MiniRoomBlock";
 import OutputPanel from "./_components/output-panel";
 
 export default function Home() {
@@ -9,7 +10,8 @@ export default function Home() {
         <Header />
       </div>
 
-      <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 auto-rows-[1fr]">
+      <div className="relative max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 auto-rows-[1fr]">
+        <MiniRoomBlock />
         <div className="h-full">
           <EditorPanel />
         </div>

@@ -5,48 +5,56 @@ import {
   useCodeEditorStore,
 } from "@/store/useCodeEditorStore";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
+import { myPermissions, useLiveStore } from "@/store/useLiveStore";
+import { toast } from "sonner";
 
 function RunButton() {
   const { user } = useUser();
+  const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
   const { runCode, language, isRunning, setLanguage, setVersion } =
     useCodeEditorStore();
   const saveExecution = useMutation(api.codeExecutions.saveExecution);
   const controlExecution = useMutation(api.codeExecutions.controlExecution);
+  const { room } = useLiveStore();
 
   const handleRun = async () => {
-    // if (!!roomId && !livePermission?.canRunCode) return;
-
-    const { error, message } = (await controlExecution({ language })) as any;
-
-    if (error) {
-      const msg = !!message ? message : "Unexpected error occurred";
-      setLanguage("javascript");
-      setVersion("18.15.0");
-      useCodeEditorStore.setState({
-        error: msg,
-        executionResult: {
-          code: useCodeEditorStore.getState().getCode(),
-          error: msg,
-          output: null,
-        },
-      });
+    if (!userData) return;
+    if (room?.id && !myPermissions(userData?._id).canPlay) {
+      toast.error("You don't have permission to run code in this room");
       return;
-    }
+    } else {
+      const { error, message } = (await controlExecution({ language })) as any;
 
-    await runCode();
-    const result = getExecutionResult();
+      if (error) {
+        const msg = !!message ? message : "Unexpected error occurred";
+        setLanguage("javascript");
+        setVersion("18.15.0");
+        useCodeEditorStore.setState({
+          error: msg,
+          executionResult: {
+            code: useCodeEditorStore.getState().getCode(),
+            error: msg,
+            output: null,
+          },
+        });
+        return;
+      }
 
-    if (user && result) {
-      await saveExecution({
-        language,
-        code: result.code,
-        output: result.output || undefined,
-        error: result.error || undefined,
-      });
+      await runCode();
+      const result = getExecutionResult();
+
+      if (user && result) {
+        await saveExecution({
+          language,
+          code: result.code,
+          output: result.output || undefined,
+          error: result.error || undefined,
+        });
+      }
     }
   };
 

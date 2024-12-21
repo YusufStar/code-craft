@@ -11,5 +11,8 @@ export const useLiveStore = create<LiveStore>((set) => ({
   },
 }));
 
-export const myPermissions = (userId: string) =>
-  useLiveStore.getState().room?.permissions[userId];
+export const myPermissions = (userId: string): Room["permissions"] => {
+  console.log(userId)
+  console.log("permissions", useLiveStore.getState().room?.permissions[userId])
+  return useLiveStore.getState().room?.permissions[userId]
+}

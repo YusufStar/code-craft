@@ -25,19 +25,18 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import QuestionTab from "./question-tab";
 import LiveTab from "./LiveTab";
+import { useTabsStore } from "@/store/useTabsStore";
 
 function OutputPanel() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
+  const { tabRefs, currentTab, setCurrentTab } = useTabsStore();
 
   const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
 
   const [maxHeight] = useState(150);
   const { output, error, isRunning } = useCodeEditorStore();
   const [isCopied, setIsCopied] = useState(false);
-  const [currentTab, setCurrentTab] = useState<
-    "output" | "ai" | "question" | "live"
-  >("output");
 
   const [message, setMessage] = useState("");
   const [underlineStyle, setUnderlineStyle] = useState({ width: 0, left: 0 });
@@ -47,14 +46,6 @@ function OutputPanel() {
   const popupRef = useRef<HTMLDivElement | null>(null); // Popup reference
 
   const hasContent = error || output;
-  const tabRefs: {
-    [key: string]: React.MutableRefObject<HTMLDivElement | null>;
-  } = {
-    output: useRef<HTMLDivElement | null>(null),
-    ai: useRef<HTMLDivElement | null>(null),
-    question: useRef<HTMLDivElement | null>(null),
-    live: useRef<HTMLDivElement | null>(null),
-  };
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -386,7 +377,7 @@ function OutputPanel() {
 
         {userData?.isPro && currentTab === "question" && <QuestionTab />}
 
-        {userData?.isPro && currentTab === "live" && <LiveTab />}
+        <LiveTab canRender={!!userData?.isPro && currentTab === "live"}/>
       </AnimatePresence>
     </div>
   );

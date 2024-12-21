@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import ConvexProvider from "@/components/providers/convex-provider";
 import Footer from "@/components/Footer";
-import { Toaster} from 'sonner'
+import { Toaster } from "sonner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,7 +35,7 @@ export default function RootLayout({
 
         <Footer />
 
-        <Toaster />
+        <Toaster theme="dark" position="bottom-left" />
       </body>
     </html>
   );

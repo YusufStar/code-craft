@@ -86,3 +86,9 @@ body {
 .markdown > * {
   all: revert;
 }
+
+
+
+:where(html[dir='ltr']) {
+  all: revert;
+}

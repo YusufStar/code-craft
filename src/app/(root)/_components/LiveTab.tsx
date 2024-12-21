@@ -7,11 +7,11 @@ import { Avatar } from "@mui/material";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
-import { leaveRoom } from "@/actions/room-actions";
 import useSocketStore from "@/store/useSocketStore";
 
-const LiveTab = () => {
+const LiveTab = ({ canRender }: { canRender: boolean }) => {
   const { room, setRoom } = useLiveStore();
+  const { socket } = useSocketStore();
   const [createSession, setCreateSession] = useState(false);
   const [joinSession, setJoinSession] = useState(false);
 
@@ -38,10 +38,10 @@ const LiveTab = () => {
   };
 
   const handleLeaveSession = async () => {
-    if (room && userData && user) {
-      await leaveRoom({
-        roomId: room.id,
+    if (room && userData && user && socket) {
+      socket.emit("leave-room", {
         userId: userData._id,
+        roomId: room.id,
       });
       setRoom(null);
     }
@@ -55,6 +55,8 @@ const LiveTab = () => {
       console.error("You are not allowed to change permissions");
     }
   };
+
+  if (!canRender) return null;
 
   return (
     <>

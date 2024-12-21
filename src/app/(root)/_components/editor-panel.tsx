@@ -96,7 +96,7 @@ function EditorPanel() {
         code: string;
         roomData: Room;
         userId: string;
-        type: "language" | "code" | "permissions" | "new-user";
+        type: "language" | "code" | "permissions" | "new-user" | "leave-room";
       }) => {
         if (type === "language") {
           if (!room) return;
@@ -132,6 +132,8 @@ function EditorPanel() {
           if (editor) {
             editor.setValue(roomData.code);
           }
+        } else if (type === "leave-room") {
+          setRoom(roomData);
         }
       }
     );

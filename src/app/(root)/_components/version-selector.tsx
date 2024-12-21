@@ -4,17 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDownIcon } from "lucide-react";
 import useMounted from "@/hooks/useMounted";
+import { useLiveStore } from "@/store/useLiveStore";
 
 function VersionSelector({ hasAccess }: { hasAccess: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const mounted = useMounted();
+  const { room } = useLiveStore();
 
   const { language, runtimes, selectedVersion, setVersion, fetchRuntimes } =
     useCodeEditorStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const versions = runtimes
-    .filter((runtime) => runtime.language === language || runtime.aliases.includes(language))
+    .filter(
+      (runtime) =>
+        runtime.language === language || runtime.aliases.includes(language)
+    )
     .map((runtime) => runtime.version);
 
   useEffect(() => {
@@ -45,6 +50,8 @@ function VersionSelector({ hasAccess }: { hasAccess: boolean }) {
   };
 
   if (!mounted || !hasAccess) return null;
+
+  if (room?.id) return null;
 
   return (
     <div className="relative" ref={dropdownRef}>
