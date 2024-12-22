@@ -113,7 +113,7 @@ const FilesPanel = () => {
     setLoading(true);
     try {
       const { data } = await axios.post(
-        `http://localhost:4000/api/create-default-project`
+        `${process.env.NEXT_PUBLIC_SOCKET_IP}/api/create-default-project`
       );
       if (!data.projectFiles) return;
       setFiles(data.projectFiles);

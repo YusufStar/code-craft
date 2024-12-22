@@ -47,7 +47,7 @@ function OutputPanel() {
   const handleUpdateLive = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.post(`http://localhost:4000/api/build`, {
+      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_IP}/api/build`, {
         files,
         id,
       });
