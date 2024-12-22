@@ -146,7 +146,6 @@ function EditorPanel() {
         } else if (type === "permissions") {
           setRoom(roomData);
         } else if (type === "new-user") {
-          console.log(roomData)
           setRoom(roomData);
           if (editor) {
             editor.setValue(roomData.code);
