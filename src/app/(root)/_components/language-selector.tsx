@@ -45,14 +45,14 @@ function LanguageSelector({ hasAccess }: { hasAccess: boolean }) {
   const handleLanguageSelect = (langId: string) => {
     if (!hasAccess && langId !== "javascript") return;
 
+    setLanguage(langId);
+
     if (room?.id && socket && userData) {
       socket.emit("update-language", {
         roomId: room?.id,
         language: langId,
         userId: userData?._id,
       });
-    } else {
-      setLanguage(langId);
     }
     setIsOpen(false);
   };

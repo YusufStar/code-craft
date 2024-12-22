@@ -78,7 +78,7 @@ function EditorPanel() {
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_IP, {
       transports: ["websocket"],
-    }); // Connect to the server (defaults to localhost)
+    });
     setSocket(socket);
 
     socket.on("connect", () => {
