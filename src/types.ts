@@ -50,33 +50,41 @@ export interface ProblemExecutionResult {
   error: string | null;
 }
 
-export interface Runtime {
-  language: string;
-  version: string;
-  aliases: string[];
+export interface FileState {
+  _id: string;
+  name: string;
+  isFolder: boolean;
+  extension?: string;
+  language?: string;
+  content?: string;
+  children?: FileState[];
 }
 
-export interface CodeEditorState {
+export interface WebState {
   language: string;
-  output: string;
-  isRunning: boolean;
-  error: string | null;
   theme: string;
   fontSize: number;
   editor: Monaco | null;
-  executionResult: ExecutionResult | null;
-  runtimes: Runtime[];
-  selectedVersion: string | null;
-
+  currentTab: "live" | "files";
+  files: FileState[];
+  selectedId: string;
+  
+  // Methods
+  setSelectId: (id: string) => void;
+  createRootFolder: (name: string) => void;
+  addFile: (file: FileState) => void;
+  removeFile: (fileName: string) => void;
+  updateFile: (fileName: string, updatedFile: Partial<FileState>) => void;
+  addFolder: (folder: FileState) => void;
+  removeFolder: (folderName: string) => void;
+  updateFolder: (folderName: string, updatedFolder: Partial<FileState>) => void;
   setEditor: (editor: Monaco) => void;
   getCode: () => string;
   setLanguage: (language: string) => void;
+  setFiles: (files: FileState[]) => void;
   setTheme: (theme: string) => void;
+  addFileRecursive: (file: FileState, parentId: string) => void;
   setFontSize: (fontSize: number) => void;
-  runCode: () => Promise<void>;
-  fetchRuntimes: () => Promise<void>;
-  setVersion: (version: string) => void;
-  setCode: (code: string) => void;
 }
 
 export interface ProblemState {
@@ -115,6 +123,16 @@ export interface ProblemState {
 
   // New method to fetch problem by ID
   getProblemWithId: (problemData: Problem) => Promise<void>;
+}
+
+export interface FileState {
+  _id: string;
+  name: string;
+  isFolder: boolean;
+  extension?: string;
+  language?: string;
+  content?: string;
+  children: FileState[];
 }
 
 export interface Snippet {

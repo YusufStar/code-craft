@@ -291,7 +291,7 @@ function EditorPanel() {
             <Editor
               className={`${loading ? "hidden" : "block"} w-full h-full`}
               height="600px"
-              language={LANGUAGE_CONFIG[language].monacoLanguage}
+              language={LANGUAGE_CONFIG[language]?.monacoLanguage ?? "plaintext"}
               onChange={handleEditorChange}
               theme={theme}
               beforeMount={defineMonacoThemes}

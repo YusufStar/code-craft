@@ -2,89 +2,85 @@
 import { useEffect, useState } from "react";
 import { defineMonacoThemes, LANGUAGE_CONFIG } from "../_constants";
 import { Editor } from "@monaco-editor/react";
-import { motion } from "framer-motion";
 import Image from "next/image";
-import { RotateCcwIcon, TypeIcon } from "lucide-react";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { TypeIcon } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
-import ShareSnippetDialog from "./share-snippet-dialog";
-import { useProblemEditorStore } from "@/store/useProblemStore";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
-import { Id } from "../../../../../convex/_generated/dataModel";
+import { getSelectedFile, useWebStore } from "@/store/useWebStore";
 
-function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
-  const problemData = useQuery(api.problems.getProblem, {
-    problemId: problemId,
-  });
+const languages = [
+  {
+    language: "javascript",
+    icon: "/javascript.png",
+    extension: ".js",
+  },
+  {
+    language: "typescript",
+    icon: "/typescript.png",
+    extension: ".ts",
+  },
+  {
+    language: "python",
+    icon: "/python.png",
+    extension: ".py",
+  },
+  {
+    language: "java",
+    icon: "/java.png",
+    extension: ".java",
+  },
+  {
+    language: "svg",
+    icon: "/svg.png",
+    extension: ".svg",
+  },
+  {
+    language: "gitignore",
+    icon: "/gitignore.png",
+    extension: ".gitignore",
+  },
+  {
+    language: "json",
+    icon: "/json.png",
+    extension: ".json",
+  },
+  {
+    language: "md",
+    icon: "/md.png",
+    extension: ".md",
+  },
+  {
+    language: "css",
+    icon: "/css.png",
+    extension: ".css",
+  },
+];
+
+function EditorPanel() {
   const clerk = useClerk();
-  const { user } = useUser();
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [loadedLanguage, setLoadedLanguage] = useState("");
-
-  const saveOrUpdateCode = useMutation(api.codes.createOrUpdateCode);
 
   const {
     language,
     theme,
     fontSize,
-    editor,
     setFontSize,
     setEditor,
-    getProblemWithId,
-    setCode,
-  } = useProblemEditorStore();
+    selectedId,
+    editor,
+    setLanguage,
+  } = useWebStore();
 
   const mounted = useMounted();
-
-  const loadCode = async () => {
-    setLoading(true);
-    if (!user) return;
-    if (loadedLanguage !== language && problemData) {
-      setLoadedLanguage(language);
-      const finded = problemData.languages.find(
-        (l) => l.language.toLowerCase() === language.toLowerCase()
-      );
-      setCode(finded?.starterTemplate ?? "");
-      if (finded?.starterTemplate) {
-        await saveCode(finded?.starterTemplate);
-      }
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (!problemData) return;
-    getProblemWithId(problemData);
-  }, [problemData]);
-
-  useEffect(() => {
-    if (editor && problemData) loadCode();
-  }, [language, problemData]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
     if (savedFontSize) setFontSize(parseInt(savedFontSize));
   }, [setFontSize]);
 
-  const handleRefresh = () => {
-    console.log("refresh");
-  };
-
-  const saveCode = async (value: string) => {
-    if (!editor || !user || (!problemId && loadedLanguage === language)) return;
-    await saveOrUpdateCode({
-      userId: user.id,
-      language: language,
-      code: value,
-      problemId: problemId,
-    });
-  };
-
   const handleEditorChange = (value: string | undefined) => {
-    console.log("editor changed value: ",value);
+    console.log("editor changed value: ", value);
   };
 
   const handleFontSizeChange = (newSize: number) => {
@@ -92,6 +88,29 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
     setFontSize(size);
     localStorage.setItem("editor-font-size", size.toString());
   };
+
+  useEffect(() => {
+    console.log("selectedId: ", selectedId);
+    if (editor && selectedId) {
+      const file = getSelectedFile();
+      console.log("file: ", file);
+      if (!file?.isFolder) {
+        const finded_lang = languages.find(
+          (l) => l.extension === file?.extension
+        )?.language;
+        if (!finded_lang) return;
+        const lang = LANGUAGE_CONFIG[finded_lang]
+
+        if (lang) {
+          setLanguage(lang.monacoLanguage);
+        } else {
+          setLanguage("plaintext");
+        }
+
+        editor?.setValue(file?.content || "");
+      }
+    }
+  }, [selectedId, editor, mounted]);
 
   if (!mounted) return null;
 
@@ -136,16 +155,6 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
                 </span>
               </div>
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleRefresh}
-              className="p-2 bg-[#1e1e2e] hover:bg-[#2a2a3a] rounded-lg ring-1 ring-white/5 transition-colors"
-              aria-label="Reset to default code"
-            >
-              <RotateCcwIcon className="size-4 text-gray-400" />
-            </motion.button>
           </div>
         </div>
 
@@ -153,7 +162,7 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
         <div className="relative h-[600px] group rounded-xl overflow-hidden ring-1 ring-white/[0.05]">
           {clerk.loaded && (
             <Editor
-              className={`${!problemData || loading ? "hidden" : "block"} w-full h-full`}
+              className={`${loading ? "hidden" : "block"} w-full h-full`}
               height="600px"
               language={LANGUAGE_CONFIG[language]?.monacoLanguage ?? "plaintext"}
               onChange={handleEditorChange}
@@ -187,10 +196,6 @@ function EditorPanel({ problemId }: { problemId: Id<"problems"> }) {
           {(!clerk.loaded || loading) && <EditorPanelSkeleton />}
         </div>
       </div>
-
-      {isShareDialogOpen && (
-        <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />
-      )}
     </div>
   );
 }

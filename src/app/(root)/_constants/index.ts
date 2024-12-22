@@ -351,6 +351,30 @@ print("Even numbers: \\(evenNumbers)")
 let sum = numbers.reduce(0, +)
 print("Sum of numbers: \\(sum)")`,
   },
+  json: {
+    id: "json",
+    label: "Json",
+    logoPath: "/json.png",
+    pistonRuntime: { language: "json", version: "5.3.3" },
+    monacoLanguage: "swift",
+    defaultCode: `// Create array
+let numbers = [1, 2, 3, 4, 5]
+
+// Print original numbers
+print("Original numbers: \\(numbers)")
+
+// Calculate squares
+let squares = numbers.map { $0 * $0 }
+print("Squared numbers: \\(squares)")
+
+// Filter even numbers
+let evenNumbers = numbers.filter { $0 % 2 == 0 }
+print("Even numbers: \\(evenNumbers)")
+
+// Calculate sum
+let sum = numbers.reduce(0, +)
+print("Sum of numbers: \\(sum)")`,
+  },
 };
 
 export const THEMES: Theme[] = [

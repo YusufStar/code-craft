@@ -1,14 +1,11 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
-import { Blocks, Code2, DockIcon, Sparkles, WebhookIcon } from "lucide-react";
-import { SignedIn } from "@clerk/nextjs";
+import { Blocks, Code2, DockIcon, Sparkles } from "lucide-react";
 import ThemeSelector from "./theme-selector";
 import LanguageSelector from "./language-selector";
-import RunButton from "./run-button";
 import HeaderProfileBtn from "./header-profile-button";
-import VersionSelector from "./version-selector";
+import { api } from "../../../../convex/_generated/api";
 
 async function Header() {
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -87,23 +84,6 @@ async function Header() {
                 Problems
               </span>
             </Link>
-            <Link
-              href="/web-playground"
-              className="relative group flex items-center gap-2 px-4 py-1.5 rounded-lg text-gray-300 bg-gray-800/50 
-              hover:bg-blue-500/10 border border-gray-800 hover:border-blue-500/50 transition-all duration-300 shadow-lg overflow-hidden"
-            >
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-blue-500/10 
-              to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
-              />
-              <WebhookIcon className="w-4 h-4 relative z-10 group-hover:rotate-3 transition-transform" />
-              <span
-                className="text-sm font-medium relative z-10 group-hover:text-white
-               transition-colors"
-              >
-                Web Playground
-              </span>
-            </Link>
           </nav>
         </div>
 
@@ -111,7 +91,6 @@ async function Header() {
           <div className="flex items-center gap-3">
             <ThemeSelector />
             <LanguageSelector hasAccess={Boolean(convexUser?.isPro)} />
-            <VersionSelector hasAccess={Boolean(convexUser?.isPro)} />
           </div>
 
           {!convexUser?.isPro && (
@@ -127,10 +106,6 @@ async function Header() {
               </span>
             </Link>
           )}
-
-          <SignedIn>
-            <RunButton />
-          </SignedIn>
 
           <div className="pl-3 border-l border-gray-800">
             <HeaderProfileBtn />
