@@ -47,10 +47,16 @@ function OutputPanel() {
   const handleUpdateLive = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_IP}/api/build`, {
-        files,
-        id,
-      });
+      if (!id) {
+        return;
+      }
+      const { data } = await axios.post(
+        `${process.env.NEXT_PUBLIC_SOCKET_IP}/api/build`,
+        {
+          files,
+          id,
+        }
+      );
 
       setLatestOutput(`
         <!DOCTYPE html>
