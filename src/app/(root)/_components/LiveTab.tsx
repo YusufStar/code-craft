@@ -51,13 +51,6 @@ const LiveTab = () => {
     //@ts-expect-error: TODO: Fix this
     if (room && room.permissions[userData?._id].lead) {
       updatePermissions(room.id, userData?._id as string, userId, permissions);
-      setRoom({
-        ...room,
-        permissions: {
-          ...room.permissions,
-          [userId]: permissions,
-        },
-      });
     } else {
       console.error("You are not allowed to change permissions");
     }
