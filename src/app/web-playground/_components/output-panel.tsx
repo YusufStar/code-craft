@@ -11,6 +11,7 @@ function OutputPanel() {
   const [underlineStyle, setUnderlineStyle] = useState({ width: 0, left: 0 });
   const [latestOutput, setLatestOutput] = useState("");
   const { files } = useWebStore();
+  const [loading, setLoading] = useState(false);
 
   const tabRefs = {
     live: useRef<HTMLDivElement | null>(null),
@@ -45,8 +46,6 @@ function OutputPanel() {
   </body>
 </html>
       `);
-
-    console.log(data.buildJS);
   };
 
   return (
@@ -120,18 +119,17 @@ function OutputPanel() {
               className="relative bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] 
         rounded-xl p-4 h-[600px]  overflow-auto font-mono text-sm"
             >
-              <button
-                onClick={handleUpdateLive}
-                className="px-4 py-2 bg-blue-500 mb-2 text-white rounded-lg"
-              >
-                Update Live Preview
-              </button>
-
-              <iframe
-                className="w-full h-full"
-                srcDoc={latestOutput}
-                sandbox="allow-scripts"
-              ></iframe>
+              {loading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="w-6 h-6 border-2 border-t-[#1e1e2e] border-b-[#1e1e2e] rounded-full animate-spin" />
+                </div>
+              ) : (
+                <iframe
+                  className="w-full h-full"
+                  srcDoc={latestOutput}
+                  sandbox="allow-scripts"
+                />
+              )}
             </div>
           </motion.div>
         )}

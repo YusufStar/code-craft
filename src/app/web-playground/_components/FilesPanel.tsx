@@ -257,7 +257,15 @@ const FilesPanel = () => {
           <FileTree
             setSelectId={setSelectId}
             selectedId={selectedId}
-            files={files}
+            files={files.sort((a, b) => {
+              if (a.isFolder && !b.isFolder) return -1;
+              if (!a.isFolder && b.isFolder) return 1;
+              if (a.isFolder && b.isFolder) {
+                return a.name.localeCompare(b.name);
+              } else {
+                return a.name.localeCompare(b.name);
+              }
+            })}
           />
         </>
       ) : (

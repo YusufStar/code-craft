@@ -94,6 +94,7 @@ export const useWebStore = create<WebState>((set, get) => {
       const updateFileRecursive = (folders: FileState[]): FileState[] => {
         return folders.map((file) => {
           if (file._id === fileId) {
+            console.log({ ...file, ...updatedFile });
             return { ...file, ...updatedFile };
           }
           if (file.isFolder) {

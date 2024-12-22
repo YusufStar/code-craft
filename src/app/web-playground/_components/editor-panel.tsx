@@ -59,6 +59,7 @@ const languages = [
 
 function EditorPanel() {
   const clerk = useClerk();
+  const [render, setRender] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const {
@@ -70,6 +71,7 @@ function EditorPanel() {
     selectedId,
     editor,
     setLanguage,
+    updateFile,
   } = useWebStore();
 
   const mounted = useMounted();
@@ -80,7 +82,11 @@ function EditorPanel() {
   }, [setFontSize]);
 
   const handleEditorChange = (value: string | undefined) => {
-    console.log("editor changed value: ", value);
+    if (editor && selectedId) {
+      updateFile(selectedId, {
+        content: value,
+      });
+    }
   };
 
   const handleFontSizeChange = (newSize: number) => {
@@ -90,16 +96,15 @@ function EditorPanel() {
   };
 
   useEffect(() => {
-    console.log("selectedId: ", selectedId);
+    setRender(false);
     if (editor && selectedId) {
       const file = getSelectedFile();
-      console.log("file: ", file);
       if (!file?.isFolder) {
         const finded_lang = languages.find(
           (l) => l.extension === file?.extension
         )?.language;
         if (!finded_lang) return;
-        const lang = LANGUAGE_CONFIG[finded_lang]
+        const lang = LANGUAGE_CONFIG[finded_lang];
 
         if (lang) {
           setLanguage(lang.monacoLanguage);
@@ -108,9 +113,10 @@ function EditorPanel() {
         }
 
         editor?.setValue(file?.content || "");
+        setRender(true);
       }
     }
-  }, [selectedId, editor, mounted]);
+  }, [selectedId, mounted, editor]);
 
   if (!mounted) return null;
 
@@ -162,9 +168,11 @@ function EditorPanel() {
         <div className="relative h-[600px] group rounded-xl overflow-hidden ring-1 ring-white/[0.05]">
           {clerk.loaded && (
             <Editor
-              className={`${loading ? "hidden" : "block"} w-full h-full`}
+              className={`${loading || !render ? "hidden" : "block"} w-full h-full`}
               height="600px"
-              language={LANGUAGE_CONFIG[language]?.monacoLanguage ?? "plaintext"}
+              language={
+                LANGUAGE_CONFIG[language]?.monacoLanguage ?? "plaintext"
+              }
               onChange={handleEditorChange}
               theme={theme}
               beforeMount={defineMonacoThemes}
