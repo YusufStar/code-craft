@@ -123,25 +123,13 @@ function EditorPanel() {
           });
           setLanguage(language);
         } else if (type === "code") {
-          console.log({
-            language,
-            code,
-            roomData,
-            userId,
-            type,
-          });
-          if (room?.id === undefined) {
-            return;
-          }
+          if (!room) return;
           if (userId === userData?._id) return;
-          if (code === editor?.getValue()) return;
-          setRoom({
-            ...room,
-            code: code,
-          });
+          if (roomData.code === editor?.getValue()) return;
+          setRoom(roomData);
 
-          if (editor && code !== editor.getValue()) {
-            editor.setValue(code);
+          if (roomData?.code && editor && code !== editor.getValue()) {
+            editor.setValue(roomData?.code);
           }
         } else if (type === "permissions") {
           setRoom(roomData);
