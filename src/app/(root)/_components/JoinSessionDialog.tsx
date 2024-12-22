@@ -60,7 +60,7 @@ const JoinSessionDialog = ({ isOpen, onClose, userData }: Props) => {
       setLoading(true);
 
       if (socket) {
-        socket.emit("new-user", {
+        socket.emit("join-room", {
           roomId: formState.roomCode,
           userId: userData?._id,
           password: formState.password,
