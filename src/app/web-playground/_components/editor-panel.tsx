@@ -72,6 +72,7 @@ function EditorPanel() {
     editor,
     setLanguage,
     updateFile,
+    setSelectId
   } = useWebStore();
 
   const mounted = useMounted();
@@ -116,7 +117,7 @@ function EditorPanel() {
         setRender(true);
       }
     }
-  }, [selectedId, mounted, editor]);
+  }, [selectedId, mounted, editor, setSelectId]);
 
   if (!mounted) return null;
 

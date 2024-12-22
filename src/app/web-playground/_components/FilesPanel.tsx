@@ -65,8 +65,9 @@ const FilesPanel = () => {
 
   const fileRef = React.useRef<HTMLDivElement | null>(null);
   const folderRef = React.useRef<HTMLDivElement | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const { files, setFiles, selectedId, setSelectId } = useWebStore();
+  const { files, setFiles, selectedId, setSelectId, setId } = useWebStore();
 
   const handleOpenFile = () => {
     setFormState({
@@ -109,45 +110,57 @@ const FilesPanel = () => {
   }, []);
 
   const handleCreateProject = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.post(
         `http://localhost:4000/api/create-default-project`
       );
-      if (typeof data === "string") return;
-      setFiles(data);
+      if (!data.projectFiles) return;
+      setFiles(data.projectFiles);
+      setId(data.id);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col items-start justify-start h-full space-y-4">
-      {files.length > 0 ? (
+      {loading ? (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-t-[#1e1e2e] rounded-full animate-spin" />
+        </div>
+      ) : (
         <>
-          <div className="flex items-center justify-between w-full relative">
-            <h2 className="text-lg font-medium text-white">Files</h2>
-            <div className="flex items-center gap-3">
-              <button
-                disabled={openFile}
-                onClick={handleOpenFile}
-                className="flex items-center gap-2 px-3 py-1 bg-[#1e1e2e] rounded-lg ring-1 ring-white/5 hover:bg-[#2e2e2e]/50 transition-all duration-200"
-              >
-                <FileIcon className="size-4 text-gray-400" />
-                <span className="text-sm font-medium text-white">Add File</span>
-              </button>
-              <button
-                disabled={openFolder}
-                onClick={handleOpenFolder}
-                className="flex items-center gap-2 px-3 py-1 bg-[#1e1e2e] rounded-lg ring-1 ring-white/5 hover:bg-[#2e2e2e]/50 transition-all duration-200"
-              >
-                <FolderIcon className="size-4 text-gray-400" />
-                <span className="text-sm font-medium text-white">
-                  Add Folder
-                </span>
-              </button>
-            </div>
+          {files.length > 0 ? (
+            <>
+              <div className="flex items-center justify-between w-full relative">
+                <h2 className="text-lg font-medium text-white">Files</h2>
+                <div className="flex items-center gap-3">
+                  <button
+                    disabled={openFile}
+                    onClick={handleOpenFile}
+                    className="flex items-center gap-2 px-3 py-1 bg-[#1e1e2e] rounded-lg ring-1 ring-white/5 hover:bg-[#2e2e2e]/50 transition-all duration-200"
+                  >
+                    <FileIcon className="size-4 text-gray-400" />
+                    <span className="text-sm font-medium text-white">
+                      Add File
+                    </span>
+                  </button>
+                  <button
+                    disabled={openFolder}
+                    onClick={handleOpenFolder}
+                    className="flex items-center gap-2 px-3 py-1 bg-[#1e1e2e] rounded-lg ring-1 ring-white/5 hover:bg-[#2e2e2e]/50 transition-all duration-200"
+                  >
+                    <FolderIcon className="size-4 text-gray-400" />
+                    <span className="text-sm font-medium text-white">
+                      Add Folder
+                    </span>
+                  </button>
+                </div>
 
-            {/*
+                {/*
             <AnimatePresence mode="wait">
               {openFile && (
                 <motion.div
@@ -248,37 +261,39 @@ const FilesPanel = () => {
               )}
             </AnimatePresence>
            */}
-          </div>
+              </div>
 
-          {/* Divider */}
-          <div className="w-full h-[1px] bg-gray-700" />
+              {/* Divider */}
+              <div className="w-full h-[1px] bg-gray-700" />
 
-          {/* Files */}
-          <FileTree
-            setSelectId={setSelectId}
-            selectedId={selectedId}
-            files={files.sort((a, b) => {
-              if (a.isFolder && !b.isFolder) return -1;
-              if (!a.isFolder && b.isFolder) return 1;
-              if (a.isFolder && b.isFolder) {
-                return a.name.localeCompare(b.name);
-              } else {
-                return a.name.localeCompare(b.name);
-              }
-            })}
-          />
+              {/* Files */}
+              <FileTree
+                setSelectId={setSelectId}
+                selectedId={selectedId}
+                files={files.sort((a, b) => {
+                  if (a.isFolder && !b.isFolder) return -1;
+                  if (!a.isFolder && b.isFolder) return 1;
+                  if (a.isFolder && b.isFolder) {
+                    return a.name.localeCompare(b.name);
+                  } else {
+                    return a.name.localeCompare(b.name);
+                  }
+                })}
+              />
+            </>
+          ) : (
+            <div className="flex items-center justify-center w-full h-full flex-col gap-2">
+              <h2 className="text-lg font-medium text-white">No Files Found</h2>
+              {/* Create React Project Button */}
+              <button
+                onClick={() => handleCreateProject()}
+                className="px-3 py-1 bg-blue-400 hover:bg-blue-500 transition-all duration-200 ease-in-out rounded-lg text-white"
+              >
+                Create Project
+              </button>
+            </div>
+          )}
         </>
-      ) : (
-        <div className="flex items-center justify-center w-full h-full flex-col gap-2">
-          <h2 className="text-lg font-medium text-white">No Files Found</h2>
-          {/* Create React Project Button */}
-          <button
-            onClick={() => handleCreateProject()}
-            className="px-3 py-1 bg-blue-400 hover:bg-blue-500 transition-all duration-200 ease-in-out rounded-lg text-white"
-          >
-            Create Project
-          </button>
-        </div>
       )}
     </div>
   );

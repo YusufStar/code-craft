@@ -10,8 +10,9 @@ function OutputPanel() {
   const { currentTab } = useWebStore();
   const [underlineStyle, setUnderlineStyle] = useState({ width: 0, left: 0 });
   const [latestOutput, setLatestOutput] = useState("");
-  const { files } = useWebStore();
+  const { files, id } = useWebStore();
   const [loading, setLoading] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const tabRefs = {
     live: useRef<HTMLDivElement | null>(null),
@@ -25,27 +26,53 @@ function OutputPanel() {
     }
   }, [currentTab]);
 
-  const handleUpdateLive = async () => {
-    const { data } = await axios.post(`http://localhost:4000/api/build`, {
-      files,
-    });
+  useEffect(() => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
 
-    setLatestOutput(`
-      <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>React App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script>
-      ${data.buildJS}
-      </script>
-  </body>
-</html>
-      `);
+    const newTimeoutId = setTimeout(() => {
+      handleUpdateLive();
+    }, 3000);
+
+    setTimeoutId(newTimeoutId);
+
+    return () => {
+      if (newTimeoutId) {
+        clearTimeout(newTimeoutId);
+      }
+    };
+  }, [files]);
+
+  const handleUpdateLive = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.post(`http://localhost:4000/api/build`, {
+        files,
+        id,
+      });
+
+      setLatestOutput(`
+        <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>React App</title>
+    </head>
+    <body>
+      <div id="root"></div>
+      <script>
+        ${data.buildJS}
+        </script>
+    </body>
+  </html>
+        `);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -68,8 +68,10 @@ export interface WebState {
   currentTab: "live" | "files";
   files: FileState[];
   selectedId: string;
+  id: string
   
   // Methods
+  setId: (id: string) => void;
   setSelectId: (id: string) => void;
   createRootFolder: (name: string) => void;
   addFile: (file: FileState) => void;
