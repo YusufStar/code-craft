@@ -17,10 +17,10 @@ function VersionSelector({ hasAccess }: { hasAccess: boolean }) {
 
   const versions = runtimes
     .filter(
-      (runtime) =>
+      (runtime: any) =>
         runtime.language === language || runtime.aliases.includes(language)
     )
-    .map((runtime) => runtime.version);
+    .map((runtime: any) => runtime.version);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
