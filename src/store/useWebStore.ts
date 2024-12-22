@@ -19,7 +19,7 @@ const getInitialState = () => {
   };
 };
 
-export const useWebStore = create<WebState>((set, get) => {
+export const useWebStore = create<WebState>((set, get, store) => {
   const initialState = getInitialState();
 
   const updateChildren = (
@@ -189,6 +189,16 @@ export const useWebStore = create<WebState>((set, get) => {
     setFontSize: (fontSize: number) => {
       localStorage.setItem("editor-fontSize", fontSize.toString());
       set({ fontSize });
+    },
+
+    createRootFolder: () => {
+      const rootFolder: FileState = {
+        _id: "root",
+        name: "Root",
+        isFolder: true,
+        children: [],
+      };
+      set({ files: [rootFolder], selectedId: "root" });
     },
 
     setLanguage: (language: string) => {

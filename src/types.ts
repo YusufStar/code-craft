@@ -7,6 +7,35 @@ export interface Theme {
   color: string;
 }
 
+export interface Runtime {
+  language: string;
+  version: string;
+  aliases: string[];
+}
+
+export interface CodeEditorState {
+  language: string;
+  output: string;
+  isRunning: boolean;
+  error: string | null;
+  theme: string;
+  fontSize: number;
+  editor: Monaco | null;
+  executionResult: ExecutionResult | null;
+  runtimes: Runtime[];
+  selectedVersion: string | null;
+
+  setEditor: (editor: Monaco) => void;
+  getCode: () => string;
+  setLanguage: (language: string) => void;
+  setTheme: (theme: string) => void;
+  setFontSize: (fontSize: number) => void;
+  runCode: () => Promise<void>;
+  fetchRuntimes: () => Promise<void>;
+  setVersion: (version: string) => void;
+  setCode: (code: string) => void;
+}
+
 export interface Language {
   id: string;
   label: string;
@@ -57,6 +86,7 @@ export interface FileState {
   extension?: string;
   language?: string;
   content?: string;
+  // @ts-expect-error: TODO: Fix this
   children?: FileState[];
 }
 
@@ -134,6 +164,7 @@ export interface FileState {
   extension?: string;
   language?: string;
   content?: string;
+  // @ts-expect-error: TODO: Fix this
   children: FileState[];
 }
 

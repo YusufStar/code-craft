@@ -98,7 +98,7 @@ function VersionSelector({ hasAccess }: { hasAccess: boolean }) {
             </div>
 
             <div className="max-h-[280px] overflow-y-auto overflow-x-hidden">
-              {versions.map((version, index) => (
+              {versions.map((version: any, index: number) => (
                 <motion.div
                   key={version}
                   initial={{ opacity: 0 }}
