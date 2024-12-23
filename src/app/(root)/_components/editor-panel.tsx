@@ -123,7 +123,7 @@ function EditorPanel() {
           });
           setLanguage(language);
         } else if (type === "code") {
-          if (!room) return;
+          if (!room || !editor) return;
           if (userId === userData?._id) return;
           if (roomData.code === editor?.getValue()) return;
           setRoom(roomData);
