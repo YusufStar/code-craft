@@ -10,6 +10,32 @@ import FeatureItem from "./_components/FeatureItem";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import UpgradeButton from "./_components/UpgradeButton";
 import LoginButton from "@/components/LoginButton";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title:
+    "CodeCraft IDE - Fiyatlandırma Planları | Ücretsiz ve Premium Seçenekler",
+  description:
+    "CodeCraft IDE'nin kullanıcı dostu fiyatlandırma seçeneklerini keşfedin. Ücretsiz planda 3 programlama dili desteği, Premium planda ise tüm özelliklere erişim sağlayın.",
+  keywords:
+    "CodeCraft IDE, Fiyatlandırma Planları, Ücretsiz Kodlama, Premium Kodlama, Online IDE, Kodlama Platformu, Yapay Zeka Kodlama",
+  openGraph: {
+    title:
+      "CodeCraft IDE - Fiyatlandırma Planları | Ücretsiz ve Premium Seçenekler",
+    description:
+      "Ücretsiz ve Premium planlarımızla CodeCraft IDE'nin tüm özelliklerini keşfedin. İhtiyacınıza uygun bir plan seçerek modern bir kodlama deneyiminin tadını çıkarın.",
+    url: "https://codecraft-ide.com/pricing",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title:
+      "CodeCraft IDE - Fiyatlandırma Planları | Ücretsiz ve Premium Seçenekler",
+    description:
+      "CodeCraft IDE'nin kullanıcı dostu fiyatlandırma seçenekleriyle tanışın. Ücretsiz planda temel özellikler, Premium planda ise sınırsız erişim sizi bekliyor!",
+  },
+  robots: "index, follow",
+};
 
 async function PricingPage() {
   const user = await currentUser();
@@ -28,7 +54,6 @@ async function PricingPage() {
       <NavigationHeader />
 
       {/* main content */}
-
       <main className="relative pt-32 pb-24 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Hero   */}
@@ -44,7 +69,8 @@ async function PricingPage() {
               </h1>
             </div>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Join the next generation of developers with our professional suite of tools
+              Join the next generation of developers with our professional suite
+              of tools
             </p>
           </div>
 
@@ -63,7 +89,9 @@ async function PricingPage() {
                     <feature.icon className="w-6 h-6 text-blue-400" />
                   </div>
 
-                  <h3 className="text-lg font-medium text-white mb-2">{feature.label}</h3>
+                  <h3 className="text-lg font-medium text-white mb-2">
+                    {feature.label}
+                  </h3>
                   <p className="text-gray-400">{feature.desc}</p>
                 </div>
               </div>
@@ -90,7 +118,9 @@ async function PricingPage() {
                   <div className="inline-flex p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 ring-1 ring-gray-800/60 mb-6">
                     <Star className="w-8 h-8 text-blue-400" />
                   </div>
-                  <h2 className="text-3xl font-semibold text-white mb-4">Lifetime Pro Access</h2>
+                  <h2 className="text-3xl font-semibold text-white mb-4">
+                    Lifetime Pro Access
+                  </h2>
                   <div className="flex items-baseline justify-center gap-2 mb-4">
                     <span className="text-2xl text-gray-400">$</span>
                     <span className="text-6xl font-semibold bg-gradient-to-r from-gray-100 to-gray-300 text-transparent bg-clip-text">
@@ -98,7 +128,9 @@ async function PricingPage() {
                     </span>
                     <span className="text-xl text-gray-400">one-time</span>
                   </div>
-                  <p className="text-gray-400 text-lg">Unlock the full potential of IDE</p>
+                  <p className="text-gray-400 text-lg">
+                    Unlock the full potential of IDE
+                  </p>
                 </div>
 
                 {/* Features grid */}
