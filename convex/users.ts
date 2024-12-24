@@ -52,24 +52,23 @@ export const getUsers = query({
 
 export const upgradeToPro = mutation({
   args: {
-    email: v.string(),
-    lemonSqueezyCustomerId: v.string(),
-    lemonSqueezyOrderId: v.string(),
-    amount: v.number(),
+    _id: v.id("users"),
+    sessionId: v.string(),
   },
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .filter((q) => q.eq(q.field("email"), args.email))
+      .filter((q) => q.eq(q.field("_id"), args._id))
       .first();
+
+      console.log("User", user);
 
     if (!user) throw new Error("User not found");
 
     await ctx.db.patch(user._id, {
       isPro: true,
       proSince: Date.now(),
-      lemonSqueezyCustomerId: args.lemonSqueezyCustomerId,
-      lemonSqueezyOrderId: args.lemonSqueezyOrderId,
+      sessionId: args.sessionId,
     });
 
     return { success: true };

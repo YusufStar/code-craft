@@ -8,8 +8,7 @@ export default defineSchema({
     name: v.string(),
     isPro: v.boolean(),
     proSince: v.optional(v.number()),
-    lemonSqueezyCustomerId: v.optional(v.string()),
-    lemonSqueezyOrderId: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
   }).index("by_user_id", ["userId"]),
 
   codeExecutions: defineTable({
@@ -84,33 +83,4 @@ export default defineSchema({
       "language",
       "userId",
     ]),
-
-  rooms: defineTable({
-    name: v.string(),
-    isPrivate: v.boolean(),
-    createdUserId: v.id("users"),
-    password: v.optional(v.string()),
-    participants: v.array(v.id("users")),
-    roomCode: v.string(),
-  })
-    .index("by_created_user_id", ["createdUserId"])
-    .index("by_participants", ["participants"])
-    .index("by_name", ["name"])
-    .index("by_room_code", ["roomCode"]),
-
-  roomEditors: defineTable({
-    roomId: v.id("rooms"),
-    code: v.string(),
-    language: v.string(),
-    version: v.string(),
-    output: v.optional(v.string()),
-  }).index("by_room_id", ["roomId"]),
-
-  messages: defineTable({
-    roomId: v.id("rooms"),
-    userId: v.string(),
-    content: v.string(),
-  })
-    .index("by_room_id", ["roomId"])
-    .index("by_user_id", ["userId"]),
 });

@@ -1,19 +1,30 @@
+"use client";
+import { useAction } from "convex/react";
 import { Zap } from "lucide-react";
-import Link from "next/link";
+import { api } from "../../../../convex/_generated/api";
+import { useRouter } from "next/navigation";
 
 export default function UpgradeButton() {
-  const CHEKOUT_URL =
-    "https://ide.lemonsqueezy.com/buy/7ff0432b-72bd-4541-9362-d7cc8673c3d6";
+  const upgrade = useAction(api.stripe.pay);
+  const router = useRouter();
+
+  const handleClick = async () => {
+    const url = await upgrade();
+    if (!url) {
+      return;
+    }
+    router.push(url);
+  };
 
   return (
-    <Link
-      href={CHEKOUT_URL}
-      className="inline-flex items-center justify-center gap-2 px-8 py-4 text-white 
+    <button
+      onClick={handleClick}
+      className="inline-flex transition-all duration-200 ease-in-out items-center justify-center gap-2 px-8 py-4 text-white 
         bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg 
-        hover:from-blue-600 hover:to-blue-700 transition-all"
+        hover:from-blue-600 hover:to-blue-700"
     >
       <Zap className="w-5 h-5" />
       Upgrade to Pro
-    </Link>
+    </button>
   );
 }
