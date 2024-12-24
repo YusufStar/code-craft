@@ -32,10 +32,9 @@ function EditorPanel() {
   const [loading, setLoading] = useState(false);
   const [loadedLanguage, setLoadedLanguage] = useState("");
 
-  const router = useRouter();
   const search = useSearchParams();
-  const initialRoomId = search.get("roomId");
-  const initialRoomPassword = search.get("roomPassword");
+  let initialRoomId = search.get("roomId");
+  let initialRoomPassword = search.get("roomPassword");
 
   const { room, setRoom } = useLiveStore();
 
@@ -87,7 +86,8 @@ function EditorPanel() {
       toast.warning(
         "You are already in a room. Please leave the room to join another one."
       );
-      router.push("/");
+      initialRoomId = null;
+      initialRoomPassword = null;
       return;
     } else {
       if (socket && initialRoomId) {
