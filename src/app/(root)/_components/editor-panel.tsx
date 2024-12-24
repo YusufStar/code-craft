@@ -16,6 +16,8 @@ import { useLiveStore } from "@/store/useLiveStore";
 import useSocketStore from "@/store/useSocketStore";
 import { io } from "socket.io-client";
 import { Room } from "@/types";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 function EditorPanel() {
   const clerk = useClerk();
@@ -29,6 +31,11 @@ function EditorPanel() {
   const saveOrUpdateCode = useMutation(api.codes.createOrUpdateCode);
   const [loading, setLoading] = useState(false);
   const [loadedLanguage, setLoadedLanguage] = useState("");
+
+  const router = useRouter();
+  const search = useSearchParams();
+  const initialRoomId = search.get("roomId");
+  const initialRoomPassword = search.get("roomPassword");
 
   const { room, setRoom } = useLiveStore();
 
@@ -74,6 +81,24 @@ function EditorPanel() {
       },
     });
   }, [socket, output, isRunning, error, executionResult]);
+
+  useEffect(() => {
+    if (room && (initialRoomId || initialRoomPassword)) {
+      toast.warning(
+        "You are already in a room. Please leave the room to join another one."
+      );
+      router.push("/");
+      return;
+    } else {
+      if (socket && initialRoomId) {
+        socket.emit("join-room", {
+          roomId: initialRoomId,
+          userId: userData?._id,
+          password: initialRoomPassword ?? "",
+        });
+      }
+    }
+  }, [room, initialRoomId, socket]);
 
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_IP, {
@@ -291,7 +316,9 @@ function EditorPanel() {
             <Editor
               className={`${loading ? "hidden" : "block"} w-full h-full`}
               height="600px"
-              language={LANGUAGE_CONFIG[language]?.monacoLanguage ?? "plaintext"}
+              language={
+                LANGUAGE_CONFIG[language]?.monacoLanguage ?? "plaintext"
+              }
               onChange={handleEditorChange}
               theme={theme}
               beforeMount={defineMonacoThemes}

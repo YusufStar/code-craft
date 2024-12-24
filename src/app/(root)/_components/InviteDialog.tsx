@@ -3,6 +3,8 @@ import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useLiveStore } from "@/store/useLiveStore";
 import { toast } from "sonner";
+import QRCode from "qrcode";
+import Image from "next/image";
 
 const InviteDialog = ({
   open,
@@ -13,6 +15,7 @@ const InviteDialog = ({
 }) => {
   const { room } = useLiveStore();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const [qrCode, setQrCode] = React.useState<string | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -26,6 +29,19 @@ const InviteDialog = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
+
+  const generate = () => {
+    QRCode.toDataURL(
+      `${process.env.NEXT_PUBLIC_HOSTING_URL!}?roomId=${room?.id}&roomPassword=${room?.password}`
+    ).then(setQrCode);
+  };
+
+  useEffect(() => {
+    setQrCode(null);
+    if (open) {
+      generate();
+    }
+  }, [open]);
 
   return (
     <AnimatePresence key={room?.id + "invite"}>
@@ -55,6 +71,17 @@ const InviteDialog = ({
                 <h2 className="text-xs font-semibold text-white/70">
                   {room?.id}
                 </h2>
+              </div>
+              <div
+                className="
+                flex items-center justify-center mt-4"
+              >
+                {qrCode ? (
+                  <Image src={qrCode} alt="QR Code" width={200} height={200} />
+                ) : (
+                  // skeleton loader
+                  <div className="bg-background w-[200px] h-[200px] animate-pulse bg-gray-800 rounded-md"></div>
+                )}
               </div>
               <div className="flex justify-end mt-4">
                 <button

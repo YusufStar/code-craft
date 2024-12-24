@@ -209,6 +209,7 @@ export interface Room {
   code: string;
   language: string;
   output: string;
+  password: string;
 }
 
 export interface LiveStore {

@@ -16,7 +16,6 @@ import type {
 import type * as codeExecutions from "../codeExecutions.js";
 import type * as codes from "../codes.js";
 import type * as http from "../http.js";
-import type * as lemonSqueezy from "../lemonSqueezy.js";
 import type * as problems from "../problems.js";
 import type * as snippets from "../snippets.js";
 import type * as solves from "../solves.js";
@@ -35,7 +34,6 @@ declare const fullApi: ApiFromModules<{
   codeExecutions: typeof codeExecutions;
   codes: typeof codes;
   http: typeof http;
-  lemonSqueezy: typeof lemonSqueezy;
   problems: typeof problems;
   snippets: typeof snippets;
   solves: typeof solves;

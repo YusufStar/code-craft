@@ -8,12 +8,14 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import useSocketStore from "@/store/useSocketStore";
+import InviteDialog from "./InviteDialog";
 
 const LiveTab = () => {
   const { room, setRoom } = useLiveStore();
   const { socket } = useSocketStore();
   const [createSession, setCreateSession] = useState(false);
   const [joinSession, setJoinSession] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const { user } = useUser();
 
@@ -56,6 +58,10 @@ const LiveTab = () => {
     }
   };
 
+  const onClose = () => {
+    setOpen(false);
+  };
+
   return (
     <>
       <CreateSessionDialog
@@ -68,6 +74,8 @@ const LiveTab = () => {
         isOpen={joinSession}
         onClose={handleJoinClose}
       />
+
+      <InviteDialog open={open} onClose={onClose} />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -108,12 +116,21 @@ const LiveTab = () => {
                     {room?.id}
                   </h2>
 
-                  <button
-                    onClick={handleLeaveSession}
-                    className="px-3 py-1.5 bg-red-600 duration-200 ease-in-out text-white font-semibold rounded-lg shadow hover:bg-red-700 transition"
-                  >
-                    Leave Session
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleLeaveSession}
+                      className="px-3 py-1.5 bg-red-600 duration-200 ease-in-out text-white font-semibold rounded-lg shadow hover:bg-red-700 transition"
+                    >
+                      Leave Session
+                    </button>
+
+                    <button
+                      onClick={() => setOpen(true)}
+                      className="px-3 py-1.5 bg-green-600 duration-200 ease-in-out text-white font-semibold rounded-md text-xs shadow hover:bg-green-700 transition"
+                    >
+                      Invite User
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   {room?.permissions &&
