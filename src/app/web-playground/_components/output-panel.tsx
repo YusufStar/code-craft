@@ -12,7 +12,12 @@ function OutputPanel() {
   const [latestOutput, setLatestOutput] = useState("");
   const { files, id } = useWebStore();
   const [loading, setLoading] = useState(false);
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [buildTimeoutId, setBuildTimeoutId] = useState<NodeJS.Timeout | null>(
+    null
+  );
+  const [projectTimeoutId, setProjectTimeoutId] =
+    useState<NodeJS.Timeout | null>(null);
+  const PROJECT_TIMEOUT = 5 * 60 * 1000;
 
   const tabRefs = {
     live: useRef<HTMLDivElement | null>(null),
@@ -27,15 +32,15 @@ function OutputPanel() {
   }, [currentTab]);
 
   useEffect(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+    if (buildTimeoutId) {
+      clearTimeout(buildTimeoutId);
     }
 
     const newTimeoutId = setTimeout(() => {
       handleUpdateLive();
     }, 3000);
 
-    setTimeoutId(newTimeoutId);
+    setBuildTimeoutId(newTimeoutId);
 
     return () => {
       if (newTimeoutId) {
@@ -43,6 +48,25 @@ function OutputPanel() {
       }
     };
   }, [files]);
+
+  useEffect(() => {
+    // If you are not sure that the build is received, refresh the page.
+    if (projectTimeoutId) {
+      clearTimeout(projectTimeoutId);
+    }
+
+    const newTimeoutId = setTimeout(() => {
+      location.reload();
+    }, PROJECT_TIMEOUT);
+
+    setProjectTimeoutId(newTimeoutId);
+
+    return () => {
+      if (newTimeoutId) {
+        clearTimeout(newTimeoutId);
+      }
+    };
+  }, [latestOutput]);
 
   const handleUpdateLive = async () => {
     setLoading(true);

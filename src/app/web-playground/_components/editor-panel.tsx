@@ -9,6 +9,7 @@ import { useClerk } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
 import { getSelectedFile, useWebStore } from "@/store/useWebStore";
+import { toast } from "sonner";
 
 // Dynamically import MonacoEditor with proper loading and no SSR
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
