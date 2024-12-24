@@ -3,6 +3,7 @@ import EditorPanel from "./_components/editor-panel";
 import Header from "./_components/header";
 import MiniRoomBlock from "./_components/MiniRoomBlock";
 import OutputPanel from "./_components/output-panel";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "CodeCraft IDE - Ortak Kodlama ve Canlı Kod Çalıştırma",
@@ -36,7 +37,9 @@ export default async function Home() {
       <div className="relative max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 auto-rows-[1fr]">
         <MiniRoomBlock />
         <div className="h-full">
-          <EditorPanel />
+          <Suspense fallback={<div>Loading...</div>}>
+            <EditorPanel />
+          </Suspense>
         </div>
 
         <div className="h-full">
