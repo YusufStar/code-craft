@@ -2,6 +2,7 @@ import Header from "./_components/header";
 import OutputPanel from "./_components/output-panel";
 import EditorPanel from "./_components/editor-panel";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title:
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   robots: "index, follow",
 };
 
-export default async function Home() {
+export default function Home() {
   return (
     <div className="min-h-screen">
       <div className="max-w-[1800px] mx-auto p-4">
@@ -35,11 +36,15 @@ export default async function Home() {
 
       <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 auto-rows-[1fr]">
         <div className="h-full">
-          <EditorPanel />
+          <Suspense fallback={<div>Loading...</div>}>
+            <EditorPanel />
+          </Suspense>
         </div>
 
         <div className="h-full">
-          <OutputPanel />
+          <Suspense fallback={<div>Loading...</div>}>
+            <OutputPanel />
+          </Suspense>
         </div>
       </div>
     </div>

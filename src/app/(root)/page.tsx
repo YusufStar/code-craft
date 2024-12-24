@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   robots: "index, follow",
 };
 
-export default async function Home() {
+export default function Home() {
   return (
     <div className="min-h-screen">
       <div className="max-w-[1800px] mx-auto p-4">
@@ -43,7 +43,9 @@ export default async function Home() {
         </div>
 
         <div className="h-full">
-          <OutputPanel />
+          <Suspense fallback={<div>Loading...</div>}>
+            <OutputPanel />
+          </Suspense>
         </div>
       </div>
     </div>

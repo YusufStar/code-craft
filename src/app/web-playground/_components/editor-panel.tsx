@@ -1,60 +1,32 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useCallback } from "react";
 import { defineMonacoThemes, LANGUAGE_CONFIG } from "../_constants";
-import { Editor } from "@monaco-editor/react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { TypeIcon } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./editor-panel-skeleton";
 import { getSelectedFile, useWebStore } from "@/store/useWebStore";
 
+// Dynamically import MonacoEditor with proper loading and no SSR
+const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
+  ssr: false,
+  loading: () => <EditorPanelSkeleton />,
+});
+
+// Language configurations
 const languages = [
-  {
-    language: "javascript",
-    icon: "/javascript.png",
-    extension: ".js",
-  },
-  {
-    language: "typescript",
-    icon: "/typescript.png",
-    extension: ".ts",
-  },
-  {
-    language: "python",
-    icon: "/python.png",
-    extension: ".py",
-  },
-  {
-    language: "java",
-    icon: "/java.png",
-    extension: ".java",
-  },
-  {
-    language: "svg",
-    icon: "/svg.png",
-    extension: ".svg",
-  },
-  {
-    language: "gitignore",
-    icon: "/gitignore.png",
-    extension: ".gitignore",
-  },
-  {
-    language: "json",
-    icon: "/json.png",
-    extension: ".json",
-  },
-  {
-    language: "md",
-    icon: "/md.png",
-    extension: ".md",
-  },
-  {
-    language: "css",
-    icon: "/css.png",
-    extension: ".css",
-  },
+  { language: "javascript", icon: "/javascript.png", extension: ".js" },
+  { language: "typescript", icon: "/typescript.png", extension: ".ts" },
+  { language: "python", icon: "/python.png", extension: ".py" },
+  { language: "java", icon: "/java.png", extension: ".java" },
+  { language: "svg", icon: "/svg.png", extension: ".svg" },
+  { language: "gitignore", icon: "/gitignore.png", extension: ".gitignore" },
+  { language: "json", icon: "/json.png", extension: ".json" },
+  { language: "md", icon: "/md.png", extension: ".md" },
+  { language: "css", icon: "/css.png", extension: ".css" },
 ];
 
 function EditorPanel() {
@@ -72,52 +44,55 @@ function EditorPanel() {
     editor,
     setLanguage,
     updateFile,
-    setSelectId
+    setSelectId,
   } = useWebStore();
 
   const mounted = useMounted();
 
+  // Load font size from localStorage once during component mount
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
     if (savedFontSize) setFontSize(parseInt(savedFontSize));
   }, [setFontSize]);
 
-  const handleEditorChange = (value: string | undefined) => {
-    if (editor && selectedId) {
-      updateFile(selectedId, {
-        content: value,
-      });
-    }
-  };
+  // Handle editor content change
+  const handleEditorChange = useCallback(
+    (value: string | undefined) => {
+      if (editor && selectedId) {
+        updateFile(selectedId, { content: value });
+      }
+    },
+    [editor, selectedId, updateFile]
+  );
 
-  const handleFontSizeChange = (newSize: number) => {
-    const size = Math.min(Math.max(newSize, 12), 24);
-    setFontSize(size);
-    localStorage.setItem("editor-font-size", size.toString());
-  };
+  // Handle font size change and persist to localStorage
+  const handleFontSizeChange = useCallback(
+    (newSize: number) => {
+      const size = Math.min(Math.max(newSize, 12), 24);
+      setFontSize(size);
+      localStorage.setItem("editor-font-size", size.toString());
+    },
+    [setFontSize]
+  );
 
+  // Setting up language and editor content once the selected file is available
   useEffect(() => {
     setRender(false);
     if (editor && selectedId) {
       const file = getSelectedFile();
       if (!file?.isFolder) {
-        const finded_lang = languages.find(
+        const foundLang = languages.find(
           (l) => l.extension === file?.extension
         )?.language;
-        if (!finded_lang) return;
-        const lang = LANGUAGE_CONFIG[finded_lang];
+        if (!foundLang) return;
 
-        if (lang) {
-          setLanguage(lang.monacoLanguage);
-        } else {
-          setLanguage("plaintext");
-        }
-
+        const lang = LANGUAGE_CONFIG[foundLang];
+        setLanguage(lang ? lang.monacoLanguage : "plaintext");
         editor?.setValue(file?.content || "");
         setRender(true);
       }
     }
-  }, [selectedId, mounted, editor, setSelectId]);
+  }, [selectedId, mounted, editor, setSelectId, setLanguage]);
 
   if (!mounted) return null;
 
@@ -133,6 +108,7 @@ function EditorPanel() {
                 alt="Logo"
                 width={24}
                 height={24}
+                loading="lazy"
               />
             </div>
             <div>
@@ -165,10 +141,10 @@ function EditorPanel() {
           </div>
         </div>
 
-        {/* Editor  */}
+        {/* Editor */}
         <div className="relative h-[600px] group rounded-xl overflow-hidden ring-1 ring-white/[0.05]">
           {clerk.loaded && (
-            <Editor
+            <MonacoEditor
               className={`${loading || !render ? "hidden" : "block"} w-full h-full`}
               height="600px"
               language={
@@ -208,4 +184,5 @@ function EditorPanel() {
     </div>
   );
 }
+
 export default EditorPanel;

@@ -1,7 +1,14 @@
-import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer"
+import MonacoEditorWebpackPlugin from "monaco-editor-webpack-plugin";
+import { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const config: NextConfig = {
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+    scrollRestoration: true,
+  },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+})(config);

@@ -1,19 +1,53 @@
 "use client";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useState } from "react";
 import NavigationHeader from "@/components/NavigationHeader";
-
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Code, Grid, Search, Tag, X } from "lucide-react";
 import ProblemsPageSkeleton from "./_components/ProblemsPageSkeleton";
-import ProblemCard from "./_components/ProblemCard";
+import dynamic from "next/dynamic";
+import { debounce } from "lodash";
+
+// Dynamically import ProblemCard to reduce the initial bundle size
+const ProblemCard = dynamic(() => import("./_components/ProblemCard"), {
+  ssr: false,
+});
 
 function ProblemsPage() {
   const problems = useQuery(api.problems.getProblems);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
+
+  // Memoizing the languages list and filtering logic to avoid unnecessary re-renders
+  const languages = useMemo(() => {
+    return Array.from(
+      new Set(problems?.flatMap((s) => s.languages.map((lang) => lang.language)) || [])
+    );
+  }, [problems]);
+
+  const popularLanguages = languages.slice(0, 5);
+
+  // Debounced filter function to avoid filtering on every keystroke
+  const handleSearchChange = useCallback(
+    debounce((value: string) => setSearchQuery(value), 300),
+    []
+  );
+
+  const filteredProblems = useMemo(() => {
+    return problems?.filter((snippet) => {
+      const matchesSearch =
+        snippet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        snippet.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesLanguage =
+        !selectedLanguage ||
+        snippet.languages.some((lang) => lang.language === selectedLanguage);
+
+      return matchesSearch && matchesLanguage;
+    }) || [];
+  }, [problems, searchQuery, selectedLanguage]);
 
   // loading state
   if (problems === undefined) {
@@ -25,23 +59,6 @@ function ProblemsPage() {
     );
   }
 
-  const languages = Array.from(
-    new Set(problems.flatMap((s) => s.languages.map((lang) => lang.language)))
-  );
-  const popularLanguages = languages.slice(0, 5);
-
-  const filteredProblems = problems.filter((snippet) => {
-    const matchesSearch =
-      snippet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      snippet.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesLanguage =
-      !selectedLanguage ||
-      snippet.languages.some((lang) => lang.language === selectedLanguage);
-
-    return matchesSearch && matchesLanguage;
-  });
-
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
       <NavigationHeader />
@@ -52,8 +69,7 @@ function ProblemsPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r
-             from-blue-500/10 to-purple-500/10 text-sm text-gray-400 mb-6"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-sm text-gray-400 mb-6"
           >
             <BookOpen className="w-4 h-4" />
             Community Code Library
@@ -86,7 +102,7 @@ function ProblemsPage() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Search problems by title, language"
                 className="w-full pl-12 pr-4 py-4 bg-[#1e1e2e]/80 hover:bg-[#1e1e2e] text-white
                   rounded-xl border border-[#313244] hover:border-[#414155] transition-all duration-200
@@ -147,11 +163,7 @@ function ProblemsPage() {
               <div className="flex items-center gap-1 p-1 bg-[#1e1e2e] rounded-lg ring-1 ring-gray-800">
                 <button
                   onClick={() => setView("grid")}
-                  className={`p-2 rounded-md transition-all ${
-                    view === "grid"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "text-gray-400 hover:text-gray-300 hover:bg-[#262637]"
-                  }`}
+                  className={`p-2 rounded-md transition-all ${view === "grid" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:text-gray-300 hover:bg-[#262637]"}`}
                 >
                   <Grid className="w-4 h-4" />
                 </button>
@@ -162,11 +174,7 @@ function ProblemsPage() {
 
         {/* problems Grid */}
         <motion.div
-          className={`grid gap-6 ${
-            view === "grid"
-              ? "grid-cols-1 md:grid-cols-3 lg:grid-cols-4"
-              : "grid-cols-1 max-w-3xl mx-auto"
-          }`}
+          className={`grid gap-6 ${view === "grid" ? "grid-cols-1 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1 max-w-3xl mx-auto"}`}
           layout
         >
           <AnimatePresence mode="popLayout">
@@ -185,7 +193,7 @@ function ProblemsPage() {
           >
             <div className="text-center">
               <div
-                className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br 
+                className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br
                 from-blue-500/10 to-purple-500/10 ring-1 ring-white/10 mb-6"
               >
                 <Code className="w-8 h-8 text-gray-400" />
@@ -205,7 +213,7 @@ function ProblemsPage() {
                     setSearchQuery("");
                     setSelectedLanguage(null);
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#262637] text-gray-300 hover:text-white rounded-lg 
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#262637] text-gray-300 hover:text-white rounded-lg
                     transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -219,4 +227,5 @@ function ProblemsPage() {
     </div>
   );
 }
+
 export default ProblemsPage;

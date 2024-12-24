@@ -47,7 +47,7 @@ export const useWebStore = create<WebState>((set, get, store) => {
     theme: "vs-dark",
     fontSize: 14,
     editor: null,
-    currentTab: "live",
+    currentTab: "files",
     files: [],
     selectedId: "",
     id: "",

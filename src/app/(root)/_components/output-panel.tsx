@@ -12,7 +12,7 @@ import {
   Terminal,
   Tv,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RunningCodeSkeleton from "./running-code-skeleton";
 import useAi from "@/hooks/useAi";
@@ -64,36 +64,36 @@ function OutputPanel() {
     }
   }, [currentTab, room]);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     if (!hasContent) return;
     await navigator.clipboard.writeText(error || output);
     setIsCopied(true);
 
     setTimeout(() => setIsCopied(false), 2000);
-  };
+  }, [error, output, hasContent]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (message.length <= 0) {
       toast("Please enter any message and try again.");
       return null;
     }
-    setMessages({
-      role: "user",
-      content: message,
-    });
+    setMessages({ role: "user", content: message });
     setMessage("");
-  };
+  }, [message, setMessages]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // Prevents the default newline behavior
-      handleSendMessage(); // Call send message function
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage]
+  );
 
   // Handle popup close when clicking outside
   useEffect(() => {
@@ -110,13 +110,13 @@ function OutputPanel() {
   }, []);
 
   // Handle language selection from popup
-  const handleLanguageSelect = (langId: string) => {
+  const handleLanguageSelect = useCallback((langId: string) => {
     setMessage(
       (prevMessage) =>
         `${prevMessage}\n\`\`\`${langId}\n//Please enter your code here\n\`\`\``
     );
     setIsPopupOpen(false);
-  };
+  }, []);
 
   if (!user && isLoaded && currentTab === "ai") {
     setCurrentTab("output");

@@ -27,6 +27,6 @@ export const metadata: Metadata = {
   robots: "index, follow",
 };
 
-const page = () => <ProblemsPage />;
+const page = async () => <ProblemsPage />;
 
 export default page;

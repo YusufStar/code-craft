@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import SnippetsPageSkeleton from "./_components/SnippetsPageSkeleton";
 import NavigationHeader from "@/components/NavigationHeader";
 
@@ -16,6 +16,29 @@ function SnippetsPage() {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
 
+  // Memoize languages to avoid recalculating on every render
+  const languages = useMemo(
+    () => (snippets ? [...new Set(snippets.map((s) => s.language))] : []),
+    [snippets]
+  );
+  const popularLanguages = useMemo(() => languages.slice(0, 5), [languages]);
+
+  const filteredSnippets = useMemo(() => {
+    return (
+      snippets?.filter((snippet) => {
+        const matchesSearch =
+          snippet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          snippet.language.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          snippet.userName.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesLanguage =
+          !selectedLanguage || snippet.language === selectedLanguage;
+
+        return matchesSearch && matchesLanguage;
+      }) || []
+    );
+  }, [snippets, searchQuery, selectedLanguage]);
+
   // loading state
   if (snippets === undefined) {
     return (
@@ -25,20 +48,6 @@ function SnippetsPage() {
       </div>
     );
   }
-
-  const languages = [...new Set(snippets.map((s) => s.language))];
-  const popularLanguages = languages.slice(0, 5);
-
-  const filteredSnippets = snippets.filter((snippet) => {
-    const matchesSearch =
-      snippet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      snippet.language.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      snippet.userName.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesLanguage = !selectedLanguage || snippet.language === selectedLanguage;
-
-    return matchesSearch && matchesLanguage;
-  });
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -103,18 +112,22 @@ function SnippetsPage() {
             {popularLanguages.map((lang) => (
               <button
                 key={lang}
-                onClick={() => setSelectedLanguage(lang === selectedLanguage ? null : lang)}
-                className={`
-                    group relative px-3 py-1.5 rounded-lg transition-all duration-200
+                onClick={() =>
+                  setSelectedLanguage(lang === selectedLanguage ? null : lang)
+                }
+                className={`group relative px-3 py-1.5 rounded-lg transition-all duration-200
                     ${
                       selectedLanguage === lang
                         ? "text-blue-400 bg-blue-500/10 ring-2 ring-blue-500/50"
                         : "text-gray-400 hover:text-gray-300 bg-[#1e1e2e] hover:bg-[#262637] ring-1 ring-gray-800"
-                    }
-                  `}
+                    }`}
               >
                 <div className="flex items-center gap-2">
-                  <img src={`/${lang}.png`} alt={lang} className="w-4 h-4 object-contain" />
+                  <img
+                    src={`/${lang}.png`}
+                    alt={lang}
+                    className="w-4 h-4 object-contain"
+                  />
                   <span className="text-sm">{lang}</span>
                 </div>
               </button>
@@ -192,7 +205,9 @@ function SnippetsPage() {
               >
                 <Code className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-xl font-medium text-white mb-3">No snippets found</h3>
+              <h3 className="text-xl font-medium text-white mb-3">
+                No snippets found
+              </h3>
               <p className="text-gray-400 mb-6">
                 {searchQuery || selectedLanguage
                   ? "Try adjusting your search query or filters"
@@ -219,4 +234,5 @@ function SnippetsPage() {
     </div>
   );
 }
+
 export default SnippetsPage;
