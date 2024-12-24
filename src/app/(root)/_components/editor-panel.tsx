@@ -83,14 +83,14 @@ function EditorPanel() {
   }, [socket, output, isRunning, error, executionResult]);
 
   useEffect(() => {
-    if (room && (initialRoomId || initialRoomPassword)) {
+    if (room && (initialRoomId || initialRoomPassword) && userData) {
       toast.warning(
         "You are already in a room. Please leave the room to join another one."
       );
       router.push("/");
       return;
     } else {
-      if (socket && initialRoomId) {
+      if (socket && initialRoomId && userData) {
         socket.emit("join-room", {
           roomId: initialRoomId,
           userId: userData?._id,
@@ -98,7 +98,7 @@ function EditorPanel() {
         });
       }
     }
-  }, [room, initialRoomId, socket]);
+  }, [room, initialRoomId, socket, userData]);
 
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_IP, {
