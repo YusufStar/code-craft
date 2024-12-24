@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   robots: "index, follow",
 };
 
-export default async function Home() {
+export default function Home() {
   return (
     <div className="min-h-screen">
       <div className="max-w-[1800px] mx-auto p-4">
