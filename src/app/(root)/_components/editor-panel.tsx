@@ -20,9 +20,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 // Dynamically import Monaco Editor to improve initial loading time
-const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
+const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
-  loading: () => <EditorPanelSkeleton />
+  loading: () => <EditorPanelSkeleton />,
 });
 
 function EditorPanel() {
@@ -267,9 +267,12 @@ function EditorPanel() {
             </div>
             <div>
               <h2 className="text-sm font-medium text-white">Code Editor</h2>
-              <p className="text-xs text-gray-500">Write and execute your code</p>
+              <p className="text-xs text-gray-500">
+                Write and execute your code
+              </p>
             </div>
           </div>
+
           <div className="flex items-center gap-3">
             {/* Font Size Slider */}
             <div className="flex items-center gap-3 px-3 py-2 bg-[#1e1e2e] rounded-lg ring-1 ring-white/5">
@@ -321,7 +324,9 @@ function EditorPanel() {
             <MonacoEditor
               className={`${loading ? "hidden" : "block"} w-full h-full`}
               height="600px"
-              language={LANGUAGE_CONFIG[language]?.monacoLanguage ?? "plaintext"}
+              language={
+                LANGUAGE_CONFIG[language]?.monacoLanguage ?? "plaintext"
+              }
               onChange={handleEditorChange}
               theme={theme}
               beforeMount={defineMonacoThemes}

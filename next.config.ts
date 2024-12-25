@@ -1,5 +1,4 @@
 import withBundleAnalyzer from "@next/bundle-analyzer"
-import MonacoEditorWebpackPlugin from "monaco-editor-webpack-plugin";
 import { NextConfig } from "next";
 
 const config: NextConfig = {
